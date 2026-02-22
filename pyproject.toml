@@ -13,6 +13,9 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+dependencies = [
+    "pandas>=3.0.1",
+]
 
 [project.urls]
 Homepage = "https://tkm212bc.github.io/financial-machine-learning/"
@@ -26,11 +29,11 @@ dev = [
     "tox-uv>=1.29.0",
     "deptry>=0.24.0",
     "ty>=0.0.14",
-
     "ruff>=0.14.14",
     "mkdocs>=1.6.1",
     "mkdocs-material>=9.7.1",
     "mkdocstrings[python]>=1.0.2",
+    "ipykernel>=7.2.0",
 ]
 
 [build-system]
