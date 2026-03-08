@@ -48,14 +48,19 @@ def convert_to_second_bars(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df["datetime"] = pd.to_datetime(df["time"], unit="s", utc=True).dt.floor("1s")
 
-    bars = df.groupby("datetime", sort=True).agg(
-        open=("Price", "first"),
-        high=("Price", "max"),
-        low=("Price", "min"),
-        close=("Price", "last"),
-        volume=("Quantity", "sum"),
-        count=("Price", "count"),
-    ).reset_index()
+    bars = (
+        df
+        .groupby("datetime", sort=True)
+        .agg(
+            open=("Price", "first"),
+            high=("Price", "max"),
+            low=("Price", "min"),
+            close=("Price", "last"),
+            volume=("Quantity", "sum"),
+            count=("Price", "count"),
+        )
+        .reset_index()
+    )
 
     bars["count"] = bars["count"].astype(int)
     logger.info("Produced %d second bars", len(bars))
@@ -68,9 +73,7 @@ def main() -> int:
     default_input = project_root / "inputs" / "btc_bid_ask_data.csv"
     default_output = project_root / "outputs" / "btc_bid_ask_1s.csv"
 
-    parser = argparse.ArgumentParser(
-        description="Convert Bitcoin tick data to 1-second OHLCV bars."
-    )
+    parser = argparse.ArgumentParser(description="Convert Bitcoin tick data to 1-second OHLCV bars.")
     parser.add_argument(
         "input",
         type=Path,
@@ -116,24 +119,24 @@ def main() -> int:
 
     try:
         df = load_tick_data(args.input)
-    except ValueError as e:
-        logger.error("%s", e)
+    except ValueError:
+        logger.exception("Invalid input data")
         return 1
-    except Exception as e:
-        logger.exception("Failed to load data: %s", e)
+    except Exception:
+        logger.exception("Failed to load data")
         return 1
 
     try:
         bars = convert_to_second_bars(df)
-    except Exception as e:
-        logger.exception("Failed to convert: %s", e)
+    except Exception:
+        logger.exception("Failed to convert")
         return 1
     try:
         output.parent.mkdir(parents=True, exist_ok=True)
         bars.to_csv(output, index=not args.no_index)
         logger.info("Wrote %d second bars to %s", len(bars), output)
-    except Exception as e:
-        logger.exception("Failed to write output: %s", e)
+    except Exception:
+        logger.exception("Failed to write output")
         return 1
     return 0
 
