@@ -16,17 +16,24 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 
-def load_tick_data(path: Path) -> pd.DataFrame:
-    """Load tick data CSV. Expects 'time', 'Price', 'Quantity' columns."""
+def load_tick_data(path: Path, min_time: float = 1e9) -> pd.DataFrame:
+    """Load and clean tick data CSV. Expects 'time', 'Price', 'Quantity' columns."""
     logger.info("Loading tick data from %s", path)
     df = pd.read_csv(path)
-    logger.debug("Loaded %d ticks", len(df))
     required = {"time", "Price", "Quantity"}
     missing = required - set(df.columns)
     if missing:
         msg = f"Input file missing columns: {missing}. Found: {list(df.columns)}"
         logger.error(msg)
         raise ValueError(msg)
+
+    # Drop rows with invalid/malformed timestamps (e.g. truncated)
+    n_before = len(df)
+    df = df.dropna(subset=["time", "Price", "Quantity"])
+    df = df[(df["time"] >= min_time) & (df["Price"] > 0) & (df["Quantity"] > 0)]
+    n_dropped = n_before - len(df)
+    if n_dropped:
+        logger.info("Dropped %d invalid rows, %d ticks remaining", n_dropped, len(df))
     return df
 
 
