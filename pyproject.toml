@@ -5,17 +5,18 @@ description = "This is a project for notebooks for advances in financial machine
 authors = [{ name = "tkm", email = "xy@gmail.com" }]
 readme = "README.md"
 keywords = ['python']
-requires-python = ">=3.10,<4.0"
+requires-python = ">=3.14,<4.0"
 classifiers = [
     "Intended Audience :: Developers",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "numpy>=2.0.0",
+    "pandas>=3.0.1",
+    "plotly>=5.24.0",
 ]
 
 [project.urls]
@@ -30,11 +31,12 @@ dev = [
     "tox-uv>=1.29.0",
     "deptry>=0.24.0",
     "ty>=0.0.14",
-    
     "ruff>=0.14.14",
     "mkdocs>=1.6.1",
     "mkdocs-material>=9.7.1",
     "mkdocstrings[python]>=1.0.2",
+    "ipykernel>=7.2.0",
+    "nbformat>=5.10.4",
 ]
 
 [build-system]
@@ -46,13 +48,13 @@ packages = ["src/financial_machine_learning"]
 
 [tool.ty.environment]
 python = "./.venv"
-python-version = "3.10"
+python-version = "3.14"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py314"
 line-length = 120
 fix = true
 
@@ -98,8 +100,12 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101"]
+"notebooks/**/*.ipynb" = ["E402"]
 
 [tool.ruff.format]
 preview = true
 
-
+[tool.deptry]
+known_first_party = ["financial_machine_learning"]
+extend_exclude = ["docs"]
+github_output = true

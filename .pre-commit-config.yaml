@@ -9,7 +9,7 @@ repos:
       - id: check-json
         exclude: ^.devcontainer/devcontainer.json
       - id: pretty-format-json
-        exclude: ^.devcontainer/devcontainer.json
+        exclude: ^(.devcontainer/devcontainer\.json|.*\.ipynb)$
         args: [--autofix, --no-sort-keys]
       - id: end-of-file-fixer
       - id: trailing-whitespace
@@ -20,3 +20,8 @@ repos:
       - id: ruff-check
         args: [ --exit-non-zero-on-fix ]
       - id: ruff-format
+
+  - repo: https://github.com/fpgmaas/deptry.git
+    rev: "0.24.0"
+    hooks:
+      - id: deptry
