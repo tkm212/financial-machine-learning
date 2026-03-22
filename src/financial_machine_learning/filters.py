@@ -31,7 +31,7 @@ def cusum_filter(
     s_neg = 0.0
 
     prices = raw_time_series.dropna()
-    log_ret = np.log(prices).diff().dropna()
+    log_ret = prices.transform(np.log).diff().dropna()
 
     for t, r in log_ret.items():
         pos = s_pos + r
