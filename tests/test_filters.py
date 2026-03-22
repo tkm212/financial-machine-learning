@@ -1,7 +1,6 @@
 """Unit tests for financial_machine_learning.filters."""
 
 import pandas as pd
-import pytest
 
 from financial_machine_learning.filters import cusum_filter
 

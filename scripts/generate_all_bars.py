@@ -11,8 +11,8 @@ from pathlib import Path
 # Add project root for imports
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from financial_machine_learning.bars import dollar_bars, tick_bars, time_bars, volume_bars
 from scripts.convert_to_second_bars import load_tick_data
-from financial_machine_learning.bars import tick_bars, time_bars, volume_bars, dollar_bars
 
 
 def main() -> int:

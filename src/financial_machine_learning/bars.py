@@ -20,7 +20,8 @@ def time_bars(df: pd.DataFrame, freq: str = "1s") -> pd.DataFrame:
     df["datetime"] = pd.to_datetime(df["time"], unit="s", utc=True).dt.floor(freq)
 
     bars = (
-        df.groupby("datetime", sort=True)
+        df
+        .groupby("datetime", sort=True)
         .agg(
             open=("Price", "first"),
             high=("Price", "max"),
@@ -44,11 +45,12 @@ def tick_bars(df: pd.DataFrame, threshold: int = 100) -> pd.DataFrame:
     """
     df = df.sort_values("time").reset_index(drop=True)
     df = df.copy()
-    df["cum_ticks"] = (df.index + 1)
+    df["cum_ticks"] = df.index + 1
     df["bar_id"] = (df["cum_ticks"] - 1) // threshold
 
     bars = (
-        df.groupby("bar_id")
+        df
+        .groupby("bar_id")
         .agg(
             datetime=("time", "last"),
             open=("Price", "first"),
@@ -77,7 +79,8 @@ def volume_bars(df: pd.DataFrame, threshold: float) -> pd.DataFrame:
     df["bar_id"] = (df["cum_vol"] // threshold).astype(int)
 
     bars = (
-        df.groupby("bar_id")
+        df
+        .groupby("bar_id")
         .agg(
             datetime=("time", "last"),
             open=("Price", "first"),
@@ -107,7 +110,8 @@ def dollar_bars(df: pd.DataFrame, threshold: float) -> pd.DataFrame:
     df["bar_id"] = (df["cum_dollar"] // threshold).astype(int)
 
     bars = (
-        df.groupby("bar_id")
+        df
+        .groupby("bar_id")
         .agg(
             datetime=("time", "last"),
             open=("Price", "first"),
