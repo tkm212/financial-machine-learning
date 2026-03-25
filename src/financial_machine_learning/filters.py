@@ -7,8 +7,26 @@ Wiley. Chapter 2, Snippet 2.4.
 
 from __future__ import annotations
 
+from typing import Literal, overload
+
 import numpy as np
 import pandas as pd
+
+
+@overload
+def cusum_filter(
+    raw_time_series: pd.Series,
+    threshold: float,
+    time_stamps: Literal[True] = True,
+) -> pd.DatetimeIndex: ...
+
+
+@overload
+def cusum_filter(
+    raw_time_series: pd.Series,
+    threshold: float,
+    time_stamps: Literal[False],
+) -> list: ...
 
 
 def cusum_filter(
