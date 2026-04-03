@@ -51,6 +51,9 @@ packages = ["src/financial_machine_learning"]
 [tool.ty.environment]
 python = "./.venv"
 python-version = "3.14"
+extra-paths = [
+    "notebooks/elements-of-statistical-learning/2-Supervised_Learning",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -105,12 +108,10 @@ ignore = [
 "notebooks/**/*.ipynb" = ["E402"]
 "src/financial_machine_learning/esl_loaders.py" = ["TRY003"]
 "notebooks/elements-of-statistical-learning/**/helpers.py" = ["TRY003", "C408"]
-"notebooks/elements-of-statistical-learning/**/chapter_boot.py" = ["TRY003"]
-
 [tool.ruff.format]
 preview = true
 
 [tool.deptry]
-known_first_party = ["financial_machine_learning"]
+known_first_party = ["financial_machine_learning", "helpers"]
 extend_exclude = ["docs"]
 github_output = true

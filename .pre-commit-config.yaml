@@ -21,6 +21,15 @@ repos:
         args: [ --exit-non-zero-on-fix ]
       - id: ruff-format
 
+  - repo: local
+    hooks:
+      - id: ty
+        name: ty (type check)
+        entry: uv run ty check
+        language: system
+        types: [python]
+        pass_filenames: false
+
   - repo: https://github.com/fpgmaas/deptry.git
     rev: "0.24.0"
     hooks:
