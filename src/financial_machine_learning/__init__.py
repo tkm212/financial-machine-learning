@@ -3,12 +3,20 @@
 from financial_machine_learning.bars import dollar_bars, tick_bars, time_bars, volume_bars
 from financial_machine_learning.filters import cusum_filter
 from financial_machine_learning.labeling import triple_barrier_labels
+from financial_machine_learning.weights import (
+    average_uniqueness,
+    concurrent_labels_per_bar,
+    time_decay_weights,
+)
 
 __all__ = [
+    "average_uniqueness",
+    "concurrent_labels_per_bar",
     "cusum_filter",
     "dollar_bars",
     "tick_bars",
     "time_bars",
+    "time_decay_weights",
     "triple_barrier_labels",
     "volume_bars",
 ]
