@@ -17,6 +17,8 @@ dependencies = [
     "numpy>=2.0.0",
     "pandas>=3.0.1",
     "plotly>=5.24.0",
+    "scikit-learn>=1.6.0",
+    "kagglehub>=0.3.0",
 ]
 
 [project.urls]
@@ -49,6 +51,9 @@ packages = ["src/financial_machine_learning"]
 [tool.ty.environment]
 python = "./.venv"
 python-version = "3.14"
+extra-paths = [
+    "notebooks/elements-of-statistical-learning/2-Supervised_Learning",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -101,11 +106,12 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101"]
 "notebooks/**/*.ipynb" = ["E402"]
-
+"src/financial_machine_learning/esl_loaders.py" = ["TRY003"]
+"notebooks/elements-of-statistical-learning/**/helpers.py" = ["TRY003", "C408"]
 [tool.ruff.format]
 preview = true
 
 [tool.deptry]
-known_first_party = ["financial_machine_learning"]
+known_first_party = ["financial_machine_learning", "helpers"]
 extend_exclude = ["docs"]
 github_output = true
