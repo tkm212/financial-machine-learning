@@ -19,6 +19,7 @@ dependencies = [
     "plotly>=5.24.0",
     "scikit-learn>=1.6.0",
     "kagglehub>=0.3.0",
+    "marimo>=0.13.0",
 ]
 
 [project.urls]
@@ -37,8 +38,7 @@ dev = [
     "mkdocs>=1.6.1",
     "mkdocs-material>=9.7.1",
     "mkdocstrings[python]>=1.0.2",
-    "ipykernel>=7.2.0",
-    "nbformat>=5.10.4",
+    "marimo>=0.22.3",
 ]
 
 [build-system]
@@ -106,7 +106,6 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101"]
-"notebooks/**/*.ipynb" = ["E402"]
 [tool.ruff.format]
 preview = true
 
