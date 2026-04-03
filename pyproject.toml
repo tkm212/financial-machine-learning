@@ -17,6 +17,8 @@ dependencies = [
     "numpy>=2.0.0",
     "pandas>=3.0.1",
     "plotly>=5.24.0",
+    "scikit-learn>=1.6.0",
+    "kagglehub>=0.3.0",
 ]
 
 [project.urls]
@@ -101,6 +103,9 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101"]
 "notebooks/**/*.ipynb" = ["E402"]
+"src/financial_machine_learning/esl_loaders.py" = ["TRY003"]
+"notebooks/elements-of-statistical-learning/**/helpers.py" = ["TRY003", "C408"]
+"notebooks/elements-of-statistical-learning/**/chapter_boot.py" = ["TRY003"]
 
 [tool.ruff.format]
 preview = true
