@@ -25,7 +25,8 @@ def find_project_root(max_up: int = 12) -> Path:
         if p.parent == p:
             break
         p = p.parent
-    raise RuntimeError("Could not find project root (pyproject.toml).")
+    msg = "Could not find project root (pyproject.toml)."
+    raise RuntimeError(msg)
 
 
 def ensure_package_on_path(root: Path) -> None:
@@ -120,7 +121,7 @@ def knn_train_test_mse_figure(
         xaxis_title="k (neighbors)",
         yaxis_title="MSE",
         template="plotly_white",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
     )
 
     k_best = int(ks[int(np.argmin(test_mse))])
@@ -210,7 +211,7 @@ def linear_vs_knn_single_feature_figure(
             y=y_train.iloc[order],
             mode="markers",
             name="train",
-            marker=dict(size=4, opacity=0.35),
+            marker={"size": 4, "opacity": 0.35},
         )
     )
     fig.add_trace(go.Scatter(x=grid.ravel(), y=lin1.predict(grid), mode="lines", name="linear"))

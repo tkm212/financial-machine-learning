@@ -34,7 +34,8 @@ def load_atpwta_regression(inputs_dir: Path) -> tuple[pd.DataFrame, pd.Series, s
     match_paths = [p for p in paths if "match" in p.name.lower()]
     use_paths = match_paths or paths
     if not use_paths:
-        raise FileNotFoundError(f"No CSV files under {root}")
+        msg = f"No CSV files under {root}"
+        raise FileNotFoundError(msg)
 
     frames: list[pd.DataFrame] = []
     for p in use_paths:
@@ -44,14 +45,16 @@ def load_atpwta_regression(inputs_dir: Path) -> tuple[pd.DataFrame, pd.Series, s
             continue
 
     if not frames:
-        raise ValueError(f"Could not read any CSV from {root}")
+        msg = f"Could not read any CSV from {root}"
+        raise ValueError(msg)
 
     df = pd.concat(frames, ignore_index=True)
 
     target = next((c for c in TARGET_PRIORITY if c in df.columns), None)
     if target is None:
         numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-        raise ValueError(f"No target in {TARGET_PRIORITY}. Numeric columns (sample): {numeric_cols[:20]}")
+        msg = f"No target in {TARGET_PRIORITY}. Numeric columns (sample): {numeric_cols[:20]}"
+        raise ValueError(msg)
 
     y_raw = df[target]
     X = df.drop(columns=[target], errors="ignore").select_dtypes(include=[np.number])
@@ -60,7 +63,8 @@ def load_atpwta_regression(inputs_dir: Path) -> tuple[pd.DataFrame, pd.Series, s
     X = tbl.drop(columns=[target])
 
     if len(X) < 50:
-        raise ValueError(f"Too few complete rows after dropna: {len(X)}")
+        msg = f"Too few complete rows after dropna: {len(X)}"
+        raise ValueError(msg)
 
     return X, y, target
 
@@ -87,14 +91,16 @@ def load_tmdb_revenue_regression(inputs_dir: Path) -> tuple[pd.DataFrame, pd.Ser
     if not preferred:
         preferred = candidates
     if not preferred:
-        raise FileNotFoundError(f"No CSV files under {root}")
+        msg = f"No CSV files under {root}"
+        raise FileNotFoundError(msg)
 
     path = preferred[0]
     df = pd.read_csv(path, low_memory=False)
 
     target = "revenue"
     if target not in df.columns:
-        raise ValueError(f"Expected column {target!r} in {path.name}; got {list(df.columns)[:25]}")
+        msg = f"Expected column {target!r} in {path.name}; got {list(df.columns)[:25]}"
+        raise ValueError(msg)
 
     df = df.copy()
     for col in ("budget", "revenue"):
@@ -116,6 +122,7 @@ def load_tmdb_revenue_regression(inputs_dir: Path) -> tuple[pd.DataFrame, pd.Ser
     X = tbl.drop(columns=[target])
 
     if len(X) < 50:
-        raise ValueError(f"Too few complete rows after filters: {len(X)}")
+        msg = f"Too few complete rows after filters: {len(X)}"
+        raise ValueError(msg)
 
     return X, y, target
