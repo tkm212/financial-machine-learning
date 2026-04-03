@@ -53,9 +53,7 @@ def fit_linear_train_test_mse(
     test_size: float = 0.25,
     random_state: int = 0,
 ) -> dict[str, Any]:
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_size, random_state=random_state
-    )
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
     lin = LinearRegression()
     lin.fit(X_train, y_train)
     train_mse = mean_squared_error(y_train, lin.predict(X_train))
@@ -95,9 +93,7 @@ def knn_train_test_mse_figure(
 ) -> tuple[go.Figure, dict[str, Any]]:
     """Scale once per split, scan $k$, plot train vs test MSE; return figure and summary dict."""
     X_run, y_run = subsample_xy(X, y, max_rows, random_state=random_state)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X_run, y_run, test_size=test_size, random_state=random_state
-    )
+    X_train, X_test, y_train, y_test = train_test_split(X_run, y_run, test_size=test_size, random_state=random_state)
 
     lin = LinearRegression().fit(X_train, y_train)
     y_te_lin = lin.predict(X_test)
@@ -218,9 +214,7 @@ def linear_vs_knn_single_feature_figure(
         )
     )
     fig.add_trace(go.Scatter(x=grid.ravel(), y=lin1.predict(grid), mode="lines", name="linear"))
-    fig.add_trace(
-        go.Scatter(x=grid.ravel(), y=knn1.predict(grid), mode="lines", name=f"k-NN (k={k_neighbors})")
-    )
+    fig.add_trace(go.Scatter(x=grid.ravel(), y=knn1.predict(grid), mode="lines", name=f"k-NN (k={k_neighbors})"))
     fig.update_layout(
         title=f"Response vs {col}",
         xaxis_title=col,
