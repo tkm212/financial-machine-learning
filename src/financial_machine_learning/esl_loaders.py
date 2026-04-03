@@ -41,7 +41,7 @@ def load_atpwta_regression(inputs_dir: Path) -> tuple[pd.DataFrame, pd.Series, s
     for p in use_paths:
         try:
             frames.append(pd.read_csv(p, low_memory=False))
-        except (OSError, UnicodeDecodeError, pd.errors.EmptyDataError):
+        except OSError, UnicodeDecodeError, pd.errors.EmptyDataError:
             continue
 
     if not frames:

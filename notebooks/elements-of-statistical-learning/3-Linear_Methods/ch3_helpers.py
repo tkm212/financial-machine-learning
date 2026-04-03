@@ -360,7 +360,10 @@ def compare_models(
     for name, y_pred in [
         ("OLS", LinearRegression().fit(X_train_s, y_train).predict(X_test_s)),
         (f"Ridge (alpha={alpha_ridge:.0f})", Ridge(alpha=alpha_ridge).fit(X_train_s, y_train).predict(X_test_s)),
-        (f"Lasso (alpha={alpha_lasso:.1f})", Lasso(alpha=alpha_lasso, max_iter=10_000).fit(X_train_s, y_train).predict(X_test_s)),
+        (
+            f"Lasso (alpha={alpha_lasso:.1f})",
+            Lasso(alpha=alpha_lasso, max_iter=10_000).fit(X_train_s, y_train).predict(X_test_s),
+        ),
         (f"PCR ({n_pcr} components)", LinearRegression().fit(X_train_pcr, y_train).predict(X_test_pcr)),
         (f"PLS ({n_pls} components)", pls.predict(X_test_s)),
     ]:
