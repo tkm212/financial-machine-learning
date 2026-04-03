@@ -126,3 +126,17 @@ def load_tmdb_revenue_regression(inputs_dir: Path) -> tuple[pd.DataFrame, pd.Ser
         raise ValueError(msg)
 
     return X, y, target
+
+
+def load_tmdb_revenue_classification(inputs_dir: Path) -> tuple[pd.DataFrame, pd.Series, str]:
+    """
+    Binary classification on TMDB movies: ``high_revenue = 1`` if revenue >= median, else 0.
+
+    Uses the same feature set as :func:`load_tmdb_revenue_regression` so all Chapter 3 helpers
+    that call ``load_tmdb_xy`` continue to work when swapped for this loader.
+    """
+    X, y_reg, _ = load_tmdb_revenue_regression(inputs_dir)
+    target = "high_revenue"
+    y = (y_reg >= y_reg.median()).astype(int)
+    y.name = target
+    return X, y, target

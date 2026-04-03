@@ -18,6 +18,7 @@ dependencies = [
     "pandas>=3.0.1",
     "plotly>=5.24.0",
     "scikit-learn>=1.6.0",
+    "scipy>=1.13.0",
     "kagglehub>=0.3.0",
     "marimo>=0.13.0",
 ]
@@ -54,6 +55,8 @@ python-version = "3.14"
 extra-paths = [
     "notebooks/elements-of-statistical-learning/2-Supervised_Learning",
     "notebooks/elements-of-statistical-learning/3-Linear_Methods",
+    "notebooks/elements-of-statistical-learning/4-Linear_Methods_Classification",
+    "notebooks/elements-of-statistical-learning/5-Basis_Expansions",
 ]
 
 [tool.pytest.ini_options]
@@ -110,6 +113,6 @@ ignore = [
 preview = true
 
 [tool.deptry]
-known_first_party = ["financial_machine_learning", "helpers", "ch3_helpers"]
+known_first_party = ["financial_machine_learning", "helpers", "ch3_helpers", "ch4_helpers", "ch5_helpers"]
 extend_exclude = ["docs"]
 github_output = true
