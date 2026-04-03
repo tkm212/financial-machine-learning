@@ -96,7 +96,9 @@ def _(mo):
 
 @app.cell
 def _(data, helpers, summary):
-    helpers.lasso_selected_coef_figure(data["X_train_s"], data["y_train"], data["feat_names"], summary["best_alpha"]).show()
+    helpers.lasso_selected_coef_figure(
+        data["X_train_s"], data["y_train"], data["feat_names"], summary["best_alpha"]
+    ).show()
     return
 
 

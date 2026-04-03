@@ -63,7 +63,9 @@ def _(mo):
 def _(X, helpers, y):
     data = helpers.scale_split(X, y)
 
-    fig, selected_order = helpers.subset_selection_figure(data["X_train"], data["X_test"], data["y_train"], data["y_test"])
+    fig, selected_order = helpers.subset_selection_figure(
+        data["X_train"], data["X_test"], data["y_train"], data["y_test"]
+    )
     fig.show()
 
     print("Feature entry order:", selected_order)

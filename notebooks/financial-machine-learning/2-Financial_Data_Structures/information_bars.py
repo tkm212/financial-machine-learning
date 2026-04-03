@@ -100,7 +100,9 @@ def _(df):
     dollar_threshold = (df["Price"] * df["Quantity"]).sum() / 300
     dollar_b = dollar_bars(df, threshold=dollar_threshold)
 
-    print(f"Time bars: {len(time_bars_df):,} | Tick: {len(tick_b):,} | Volume: {len(vol_b):,} | Dollar: {len(dollar_b):,}")
+    print(
+        f"Time bars: {len(time_bars_df):,} | Tick: {len(tick_b):,} | Volume: {len(vol_b):,} | Dollar: {len(dollar_b):,}"
+    )
     return dollar_b, tick_b, time_bars_df, vol_b
 
 
@@ -133,12 +135,24 @@ def _(mo):
 
 @app.cell
 def _(dollar_b, go, make_subplots, pd, tick_b, time_bars_df, vol_b):
-    _fig = make_subplots(rows=2, cols=2, subplot_titles=('Time bars (1s)', 'Tick bars (100/bar)', 'Volume bars', 'Dollar bars (info)'), shared_yaxes=True, vertical_spacing=0.12, horizontal_spacing=0.08)
-    for _i, (_name, _bars) in enumerate([('Time bars (1s)', time_bars_df), ('Tick bars (100/bar)', tick_b), ('Volume bars', vol_b), ('Dollar bars (info)', dollar_b)]):
-        t = pd.to_datetime(_bars['datetime']) if _bars['datetime'].dtype != 'datetime64[ns]' else _bars['datetime']
+    _fig = make_subplots(
+        rows=2,
+        cols=2,
+        subplot_titles=("Time bars (1s)", "Tick bars (100/bar)", "Volume bars", "Dollar bars (info)"),
+        shared_yaxes=True,
+        vertical_spacing=0.12,
+        horizontal_spacing=0.08,
+    )
+    for _i, (_name, _bars) in enumerate([
+        ("Time bars (1s)", time_bars_df),
+        ("Tick bars (100/bar)", tick_b),
+        ("Volume bars", vol_b),
+        ("Dollar bars (info)", dollar_b),
+    ]):
+        t = pd.to_datetime(_bars["datetime"]) if _bars["datetime"].dtype != "datetime64[ns]" else _bars["datetime"]
         _r, _c = (_i // 2 + 1, _i % 2 + 1)
-        _fig.add_trace(go.Scatter(x=t, y=_bars['close'], name=_name, mode='lines', line={'width': 1}), row=_r, col=_c)
-    _fig.update_layout(height=500, title_text='BTC/USDT Bar Types (López de Prado)', showlegend=False)
+        _fig.add_trace(go.Scatter(x=t, y=_bars["close"], name=_name, mode="lines", line={"width": 1}), row=_r, col=_c)
+    _fig.update_layout(height=500, title_text="BTC/USDT Bar Types (López de Prado)", showlegend=False)
     _fig.update_xaxes(tickangle=-45)
     _fig.show()
     return
@@ -157,16 +171,38 @@ def _(mo):
 @app.cell
 def _(dollar_b, go, make_subplots, pd, tick_b, time_bars_df, vol_b):
     def returns(bars: pd.DataFrame) -> pd.Series:
-        return _bars['close'].pct_change().dropna()
-    _fig = make_subplots(rows=2, cols=2, subplot_titles=[f'{n} (n={len(returns(b)):,})' for n, b in [('Time bars', time_bars_df), ('Tick bars', tick_b), ('Volume bars', vol_b), ('Dollar bars', dollar_b)]], vertical_spacing=0.12, horizontal_spacing=0.08)
-    for _i, (_name, _bars) in enumerate([('Time bars', time_bars_df), ('Tick bars', tick_b), ('Volume bars', vol_b), ('Dollar bars', dollar_b)]):
+        return _bars["close"].pct_change().dropna()
+
+    _fig = make_subplots(
+        rows=2,
+        cols=2,
+        subplot_titles=[
+            f"{n} (n={len(returns(b)):,})"
+            for n, b in [
+                ("Time bars", time_bars_df),
+                ("Tick bars", tick_b),
+                ("Volume bars", vol_b),
+                ("Dollar bars", dollar_b),
+            ]
+        ],
+        vertical_spacing=0.12,
+        horizontal_spacing=0.08,
+    )
+    for _i, (_name, _bars) in enumerate([
+        ("Time bars", time_bars_df),
+        ("Tick bars", tick_b),
+        ("Volume bars", vol_b),
+        ("Dollar bars", dollar_b),
+    ]):
         ret = returns(_bars)
         _r, _c = (_i // 2 + 1, _i % 2 + 1)
-        _fig.add_trace(go.Histogram(x=ret, nbinsx=50, histnorm='probability density', name=_name, showlegend=False), row=_r, col=_c)
-        _fig.add_vline(x=0, line_dash='dash', line_color='red', row=_r, col=_c)
-    _fig.update_layout(height=500, title_text='Log returns distribution by bar type')
-    _fig.update_xaxes(title_text='Return')
-    _fig.update_yaxes(title_text='Density')
+        _fig.add_trace(
+            go.Histogram(x=ret, nbinsx=50, histnorm="probability density", name=_name, showlegend=False), row=_r, col=_c
+        )
+        _fig.add_vline(x=0, line_dash="dash", line_color="red", row=_r, col=_c)
+    _fig.update_layout(height=500, title_text="Log returns distribution by bar type")
+    _fig.update_xaxes(title_text="Return")
+    _fig.update_yaxes(title_text="Density")
     _fig.show()
     return
 

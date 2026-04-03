@@ -102,15 +102,31 @@ def _(close):
 def _(close, events, go, make_subplots, np, threshold):
     log_ret = np.log(close).diff().dropna()
     _fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.7, 0.3], vertical_spacing=0.05)
-    _fig.add_trace(go.Scatter(x=close.index, y=close.values, name='Close', mode='lines', line={'width': 1}), row=1, col=1)
-    _fig.add_trace(go.Scatter(x=events, y=close.reindex(events).values, name='CUSUM events', mode='markers', marker={'size': 8, 'color': 'red'}), row=1, col=1)
-    _fig.add_trace(go.Scatter(x=log_ret.index, y=log_ret.values, fill='tozeroy', name='Log return', line={'width': 0}), row=2, col=1)
-    _fig.add_hline(y=threshold, line_dash='dash', line_color='red', opacity=0.7, row=2, col=1)
-    _fig.add_hline(y=-threshold, line_dash='dash', line_color='red', opacity=0.7, row=2, col=1)
-    _fig.update_layout(height=500, title_text='BTC Close with CUSUM Events (López de Prado, Snippet 2.4)')
-    _fig.update_yaxes(title_text='Price', row=1, col=1)
-    _fig.update_yaxes(title_text='Log return', row=2, col=1)
-    _fig.update_xaxes(title_text='Time', row=2, col=1)
+    _fig.add_trace(
+        go.Scatter(x=close.index, y=close.values, name="Close", mode="lines", line={"width": 1}), row=1, col=1
+    )
+    _fig.add_trace(
+        go.Scatter(
+            x=events,
+            y=close.reindex(events).values,
+            name="CUSUM events",
+            mode="markers",
+            marker={"size": 8, "color": "red"},
+        ),
+        row=1,
+        col=1,
+    )
+    _fig.add_trace(
+        go.Scatter(x=log_ret.index, y=log_ret.values, fill="tozeroy", name="Log return", line={"width": 0}),
+        row=2,
+        col=1,
+    )
+    _fig.add_hline(y=threshold, line_dash="dash", line_color="red", opacity=0.7, row=2, col=1)
+    _fig.add_hline(y=-threshold, line_dash="dash", line_color="red", opacity=0.7, row=2, col=1)
+    _fig.update_layout(height=500, title_text="BTC Close with CUSUM Events (López de Prado, Snippet 2.4)")
+    _fig.update_yaxes(title_text="Price", row=1, col=1)
+    _fig.update_yaxes(title_text="Log return", row=2, col=1)
+    _fig.update_xaxes(title_text="Time", row=2, col=1)
     _fig.show()
     return
 
@@ -130,12 +146,17 @@ def _(pd, time_bars):
     # PCA on multi-horizon returns (same asset, different lookbacks)
     # periods must be integers (number of bars to shift)
     # For 1s bars: 1, 5, 10, 30 = 1s, 5s, 10s, 30s horizons
-    time_bars_1 = time_bars.sort_values('datetime').reset_index(drop=True)
-    close_1 = time_bars_1['close'].astype(float)
-    rets = pd.DataFrame({'1-bar': close_1.pct_change(1), '5-bar': close_1.pct_change(5), '10-bar': close_1.pct_change(10), '30-bar': close_1.pct_change(30)})
-    rets.index = time_bars_1['datetime']
+    time_bars_1 = time_bars.sort_values("datetime").reset_index(drop=True)
+    close_1 = time_bars_1["close"].astype(float)
+    rets = pd.DataFrame({
+        "1-bar": close_1.pct_change(1),
+        "5-bar": close_1.pct_change(5),
+        "10-bar": close_1.pct_change(10),
+        "30-bar": close_1.pct_change(30),
+    })
+    rets.index = time_bars_1["datetime"]
     rets = rets.dropna()
-    print(f'Return matrix: {len(rets):,} rows')
+    print(f"Return matrix: {len(rets):,} rows")
     return (rets,)
 
 
@@ -160,14 +181,18 @@ def _(pd, rets):
 
 @app.cell
 def _(eigenvalues, go, make_subplots, weights):
-    _fig = make_subplots(rows=1, cols=2, subplot_titles=('PCA Weights (First Principal Component)', 'Eigenvalues (explained variance)'))
-    _fig.add_trace(go.Bar(x=weights.index, y=weights.values, name='Weights', showlegend=False), row=1, col=1)
-    _fig.add_trace(go.Bar(x=list(range(len(eigenvalues))), y=eigenvalues, name='Eigenvalues', showlegend=False), row=1, col=2)
-    _fig.add_hline(y=0, line_color='black', row=1, col=1)
+    _fig = make_subplots(
+        rows=1, cols=2, subplot_titles=("PCA Weights (First Principal Component)", "Eigenvalues (explained variance)")
+    )
+    _fig.add_trace(go.Bar(x=weights.index, y=weights.values, name="Weights", showlegend=False), row=1, col=1)
+    _fig.add_trace(
+        go.Bar(x=list(range(len(eigenvalues))), y=eigenvalues, name="Eigenvalues", showlegend=False), row=1, col=2
+    )
+    _fig.add_hline(y=0, line_color="black", row=1, col=1)
     _fig.update_layout(height=400)
-    _fig.update_xaxes(title_text='Component', row=1, col=2)
-    _fig.update_yaxes(title_text='Weight', row=1, col=1)
-    _fig.update_yaxes(title_text='Eigenvalue', row=1, col=2)
+    _fig.update_xaxes(title_text="Component", row=1, col=2)
+    _fig.update_yaxes(title_text="Weight", row=1, col=1)
+    _fig.update_yaxes(title_text="Eigenvalue", row=1, col=2)
     _fig.show()
     return
 

@@ -150,36 +150,42 @@ def _(bars, concurrent_labels_per_bar, labels, pd):
 def _(average_uniqueness, bar_index, labels):
     uniq = average_uniqueness(labels, bar_index)
     labels_1 = labels.assign(avg_uniqueness=uniq.values)
-    print('Average uniqueness (describe):')
-    print(labels_1['avg_uniqueness'].describe())
+    print("Average uniqueness (describe):")
+    print(labels_1["avg_uniqueness"].describe())
     return (labels_1,)
 
 
 @app.cell
 def _(bars, labels_1, pd, time_decay_weights):
     # Time-decay vs end of sample (use last bar time as reference)
-    ref = bars['datetime'].max()
+    ref = bars["datetime"].max()
     decay_span = pd.Timedelta(hours=1)
-    td = time_decay_weights(labels_1['datetime'], ref_time=ref, decay_span=decay_span)
+    td = time_decay_weights(labels_1["datetime"], ref_time=ref, decay_span=decay_span)
     labels_2 = labels_1.assign(time_decay=td.values)
-    raw = labels_2['avg_uniqueness'] * labels_2['time_decay']
+    raw = labels_2["avg_uniqueness"] * labels_2["time_decay"]
     # Combined weight (normalize to mean 1 for intuition)
-    labels_2['sample_weight'] = raw / raw.mean()
-    print(labels_2[['avg_uniqueness', 'time_decay', 'sample_weight']].describe())
+    labels_2["sample_weight"] = raw / raw.mean()
+    print(labels_2[["avg_uniqueness", "time_decay", "sample_weight"]].describe())
     return (labels_2,)
 
 
 @app.cell
 def _(bars, conc, go, make_subplots):
     # Concurrency through time (subset for readability)
-    plot_conc = conc.iloc[:min(5000, len(conc))]
+    plot_conc = conc.iloc[: min(5000, len(conc))]
     _fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.55, 0.45], vertical_spacing=0.08)
-    price_win = bars[(bars['datetime'] >= plot_conc.index.min()) & (bars['datetime'] <= plot_conc.index.max())]
-    _fig.add_trace(go.Scatter(x=price_win['datetime'], y=price_win['close'], name='Close', line={'width': 1}), row=1, col=1)
-    _fig.add_trace(go.Scatter(x=plot_conc.index, y=plot_conc.values, name='Concurrency', fill='tozeroy', line={'width': 0}), row=2, col=1)
-    _fig.update_layout(height=520, title_text='BTC close and label concurrency (first segment)')
-    _fig.update_yaxes(title_text='Price', row=1, col=1)
-    _fig.update_yaxes(title_text='Active labels', row=2, col=1)
+    price_win = bars[(bars["datetime"] >= plot_conc.index.min()) & (bars["datetime"] <= plot_conc.index.max())]
+    _fig.add_trace(
+        go.Scatter(x=price_win["datetime"], y=price_win["close"], name="Close", line={"width": 1}), row=1, col=1
+    )
+    _fig.add_trace(
+        go.Scatter(x=plot_conc.index, y=plot_conc.values, name="Concurrency", fill="tozeroy", line={"width": 0}),
+        row=2,
+        col=1,
+    )
+    _fig.update_layout(height=520, title_text="BTC close and label concurrency (first segment)")
+    _fig.update_yaxes(title_text="Price", row=1, col=1)
+    _fig.update_yaxes(title_text="Active labels", row=2, col=1)
     _fig.show()
     return
 
@@ -187,8 +193,10 @@ def _(bars, conc, go, make_subplots):
 @app.cell
 def _(go, labels_2):
     _fig = go.Figure()
-    _fig.add_trace(go.Histogram(x=labels_2['avg_uniqueness'], nbinsx=50, name='Avg uniqueness'))
-    _fig.update_layout(title='Distribution of average uniqueness per event', xaxis_title='Uniqueness', yaxis_title='Count', height=400)
+    _fig.add_trace(go.Histogram(x=labels_2["avg_uniqueness"], nbinsx=50, name="Avg uniqueness"))
+    _fig.update_layout(
+        title="Distribution of average uniqueness per event", xaxis_title="Uniqueness", yaxis_title="Count", height=400
+    )
     _fig.show()
     return
 
@@ -196,8 +204,13 @@ def _(go, labels_2):
 @app.cell
 def _(go, labels_2):
     _fig = go.Figure()
-    _fig.add_trace(go.Histogram(x=labels_2['sample_weight'], nbinsx=50, name='Combined weight'))
-    _fig.update_layout(title='Combined sample weights (uniqueness * time decay, mean-normalized)', xaxis_title='Weight', yaxis_title='Count', height=400)
+    _fig.add_trace(go.Histogram(x=labels_2["sample_weight"], nbinsx=50, name="Combined weight"))
+    _fig.update_layout(
+        title="Combined sample weights (uniqueness * time decay, mean-normalized)",
+        xaxis_title="Weight",
+        yaxis_title="Count",
+        height=400,
+    )
     _fig.show()
     return
 

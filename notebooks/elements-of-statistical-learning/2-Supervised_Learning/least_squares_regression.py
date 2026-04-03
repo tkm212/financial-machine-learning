@@ -68,7 +68,9 @@ def _(X, helpers, y):
     )
 
     y_pred = out["model"].predict(out["X_test"])
-    helpers.plot_predicted_vs_actual(out["y_test"], y_pred, title="Linear regression: predicted vs actual revenue").show()
+    helpers.plot_predicted_vs_actual(
+        out["y_test"], y_pred, title="Linear regression: predicted vs actual revenue"
+    ).show()
     return
 
 

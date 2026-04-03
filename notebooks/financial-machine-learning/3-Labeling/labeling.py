@@ -170,22 +170,34 @@ def _(mo):
 def _(bars, go, labels, pd):
     # Sample a short window with a few labeled events
     sample = labels.head(50)
-    start = sample['datetime'].min()
-    end = sample['exit_time'].max()
-    window_bars = bars[(bars['datetime'] >= start) & (bars['datetime'] <= end)]
-    bars_idx = bars.set_index('datetime')
+    start = sample["datetime"].min()
+    end = sample["exit_time"].max()
+    window_bars = bars[(bars["datetime"] >= start) & (bars["datetime"] <= end)]
+    bars_idx = bars.set_index("datetime")
     _fig = go.Figure()
-    _fig.add_trace(go.Scatter(x=window_bars['datetime'], y=window_bars['close'], name='Close', mode='lines'))
-    colors = {1: 'green', -1: 'red', 0: 'gray'}
+    _fig.add_trace(go.Scatter(x=window_bars["datetime"], y=window_bars["close"], name="Close", mode="lines"))
+    colors = {1: "green", -1: "red", 0: "gray"}
     for _, row in sample.iterrows():
         try:
-            entry_price = bars_idx.loc[row['datetime'], 'close']
+            entry_price = bars_idx.loc[row["datetime"], "close"]
             if isinstance(entry_price, pd.Series):
                 entry_price = entry_price.iloc[0]
         except KeyError:
             continue
-        _fig.add_trace(go.Scatter(x=[row['datetime'], row['exit_time']], y=[entry_price, row['exit_price']], mode='lines+markers', line={'dash': 'dot', 'width': 1}, marker={'size': 6, 'color': colors[row['label']]}, name=f"Label {int(row['label'])}", showlegend=False))
-    _fig.update_layout(title='Triple-Barrier Labels on BTC 1s Bars (sample)', xaxis_title='Time', yaxis_title='Price', height=450)
+        _fig.add_trace(
+            go.Scatter(
+                x=[row["datetime"], row["exit_time"]],
+                y=[entry_price, row["exit_price"]],
+                mode="lines+markers",
+                line={"dash": "dot", "width": 1},
+                marker={"size": 6, "color": colors[row["label"]]},
+                name=f"Label {int(row['label'])}",
+                showlegend=False,
+            )
+        )
+    _fig.update_layout(
+        title="Triple-Barrier Labels on BTC 1s Bars (sample)", xaxis_title="Time", yaxis_title="Price", height=450
+    )
     _fig.show()
     return
 
@@ -193,8 +205,23 @@ def _(bars, go, labels, pd):
 @app.cell
 def _(go, labels):
     # Label distribution (full run)
-    _fig = go.Figure(data=[go.Bar(x=labels['label'].value_counts().sort_index().index.astype(str), y=labels['label'].value_counts().sort_index().values, text=labels['label'].value_counts().sort_index().values, textposition='auto')])
-    _fig.update_layout(title='Triple-Barrier Label Distribution', xaxis_title='Label', yaxis_title='Count', xaxis={'tickvals': ['-1', '0', '1'], 'ticktext': ['Stop loss', 'Time out', 'Profit take']}, height=400)
+    _fig = go.Figure(
+        data=[
+            go.Bar(
+                x=labels["label"].value_counts().sort_index().index.astype(str),
+                y=labels["label"].value_counts().sort_index().values,
+                text=labels["label"].value_counts().sort_index().values,
+                textposition="auto",
+            )
+        ]
+    )
+    _fig.update_layout(
+        title="Triple-Barrier Label Distribution",
+        xaxis_title="Label",
+        yaxis_title="Count",
+        xaxis={"tickvals": ["-1", "0", "1"], "ticktext": ["Stop loss", "Time out", "Profit take"]},
+        height=400,
+    )
     _fig.show()
     return
 
