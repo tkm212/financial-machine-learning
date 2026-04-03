@@ -53,6 +53,7 @@ python = "./.venv"
 python-version = "3.14"
 extra-paths = [
     "notebooks/elements-of-statistical-learning/2-Supervised_Learning",
+    "notebooks/elements-of-statistical-learning/3-Linear_Methods",
 ]
 
 [tool.pytest.ini_options]
@@ -106,12 +107,10 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101"]
 "notebooks/**/*.ipynb" = ["E402"]
-"src/financial_machine_learning/esl_loaders.py" = ["TRY003"]
-"notebooks/elements-of-statistical-learning/**/helpers.py" = ["TRY003", "C408"]
 [tool.ruff.format]
 preview = true
 
 [tool.deptry]
-known_first_party = ["financial_machine_learning", "helpers"]
+known_first_party = ["financial_machine_learning", "helpers", "ch3_helpers"]
 extend_exclude = ["docs"]
 github_output = true
