@@ -57,6 +57,8 @@ extra-paths = [
     "notebooks/elements-of-statistical-learning/3-Linear_Methods",
     "notebooks/elements-of-statistical-learning/4-Linear_Methods_Classification",
     "notebooks/elements-of-statistical-learning/5-Basis_Expansions",
+    "notebooks/elements-of-statistical-learning/6-Kernel_Smoothing",
+    "notebooks/elements-of-statistical-learning/7-Model_Assessment",
 ]
 
 [tool.pytest.ini_options]
@@ -113,6 +115,6 @@ ignore = [
 preview = true
 
 [tool.deptry]
-known_first_party = ["financial_machine_learning", "helpers", "ch3_helpers", "ch4_helpers", "ch5_helpers"]
+known_first_party = ["financial_machine_learning", "helpers", "ch3_helpers", "ch4_helpers", "ch5_helpers", "ch6_helpers", "ch7_helpers"]
 extend_exclude = ["docs"]
 github_output = true
