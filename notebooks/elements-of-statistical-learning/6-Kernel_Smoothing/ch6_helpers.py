@@ -362,9 +362,7 @@ def local_poly_figure(
     for d in degrees:
         preds_log = _local_poly_predict(x_fit, y_fit, grid_fit, bw, d)
         preds_log = np.clip(preds_log, y_lo, y_hi)
-        fig.add_trace(
-            go.Scatter(x=grid_fit, y=preds_log, mode="lines", name=degree_names.get(d, f"degree {d}"))
-        )
+        fig.add_trace(go.Scatter(x=grid_fit, y=preds_log, mode="lines", name=degree_names.get(d, f"degree {d}")))
 
     fig.update_layout(
         title=f"Local polynomial regression on `{feat}` (§6.1.2, h={bw}, log1p axes)",

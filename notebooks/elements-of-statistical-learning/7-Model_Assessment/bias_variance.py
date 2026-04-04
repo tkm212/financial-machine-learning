@@ -105,9 +105,7 @@ def _(mo):
 
 @app.cell
 def _(helpers):
-    fig_bv = helpers.bias_variance_decomposition_figure(
-        n_train=60, n_test=200, noise_std=0.3, max_degree=8, n_boot=100
-    )
+    fig_bv = helpers.bias_variance_decomposition_figure(n_train=60, n_test=200, noise_std=0.3, max_degree=8, n_boot=100)
     fig_bv.show()
     return
 
