@@ -487,7 +487,7 @@ def ppr_ridge_functions_figure(
     fig.update_layout(
         title=f"PPR ridge functions: M={M} hidden units (weighted activations) — §11.2",
         xaxis_title="projection  wₘᵀx + bₘ",
-        yaxis_title="βₘ · σ(wₘᵀx + bₘ)",
+        yaxis_title="βₘ · sigma(wₘᵀx + bₘ)",
         template="plotly_white",
         legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1},
     )

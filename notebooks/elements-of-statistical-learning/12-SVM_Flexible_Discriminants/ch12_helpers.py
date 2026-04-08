@@ -113,7 +113,7 @@ def svm_cost_figure(
     std_accs: list[float] = []
     n_svs: list[float] = []
 
-    X_tr, X_te, y_tr, y_te = train_test_split(x_arr, y_cls, test_size=0.25, random_state=0)
+    X_tr, _X_te, y_tr, _y_te = train_test_split(x_arr, y_cls, test_size=0.25, random_state=0)
 
     for C in C_values:
         svc = SVC(C=C, kernel=kernel, random_state=0)
