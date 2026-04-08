@@ -10,7 +10,6 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.metrics import accuracy_score
 from sklearn.model_selection import cross_val_score, train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import PolynomialFeatures, StandardScaler
@@ -186,18 +185,18 @@ def svm_kernel_figure(
     """
     Compare SVM kernels by cross-validated accuracy (§12.3).
 
-    The kernel function $K(x, x') = \langle \phi(x), \phi(x') \rangle$ implicitly
-    maps inputs to a high-dimensional (possibly infinite) feature space $\mathcal{H}$:
+    The kernel function $K(x, x') = \\langle \\phi(x), \\phi(x') \rangle$ implicitly
+    maps inputs to a high-dimensional (possibly infinite) feature space $\\mathcal{H}$:
 
     | Kernel | $K(x, x')$ | Feature space |
     |---|---|---|
-    | Linear | $x^\top x'$ | Original $\mathbb{R}^p$ |
+    | Linear | $x^\top x'$ | Original $\\mathbb{R}^p$ |
     | Polynomial (d=3) | $(1 + x^\top x')^3$ | All degree ≤ 3 monomials |
-    | RBF / Gaussian | $\exp(-\gamma \|x - x'\|^2)$ | Infinite-dimensional |
-    | Sigmoid | $\tanh(\kappa x^\top x' + c)$ | Neural-network-like |
+    | RBF / Gaussian | $\\exp(-\\gamma \\|x - x'\\|^2)$ | Infinite-dimensional |
+    | Sigmoid | $\tanh(\\kappa x^\top x' + c)$ | Neural-network-like |
 
     Mercer's theorem guarantees that any positive semi-definite kernel corresponds to
-    an inner product in some $\mathcal{H}$, so the SVM dual is valid for all such kernels.
+    an inner product in some $\\mathcal{H}$, so the SVM dual is valid for all such kernels.
     The choice of kernel encodes **prior beliefs** about the structure of the decision boundary.
     """
     if kernels is None:
@@ -255,7 +254,7 @@ def fda_vs_lda_figure(
     max_rows: int = 2000,
     n_cv: int = 5,
 ) -> tuple[go.Figure, dict[str, Any]]:
-    """
+    r"""
     Flexible Discriminant Analysis vs LDA: effect of polynomial feature expansion (§12.5).
 
     **LDA** (§4.3) finds the linear combination of features that maximally separates classes.
@@ -338,14 +337,14 @@ def pda_shrinkage_figure(
     **PDA** (Hastie, Buja & Tibshirani 1995) adds a smoothness penalty to the LDA criterion:
         ASR(c) = (1/(N-K)) * sum_k sum_{i in C_k} ||c(x_i) - c_k||^2 + lambda * c^T Omega c
 
-    where $\Omega$ is a penalty matrix (e.g. roughness for splines).  With $\lambda = 0$ this
-    reduces to FDA/LDA; large $\lambda$ heavily regularises the discriminant directions.
+    where $\\Omega$ is a penalty matrix (e.g. roughness for splines).  With $\\lambda = 0$ this
+    reduces to FDA/LDA; large $\\lambda$ heavily regularises the discriminant directions.
 
     sklearn's `LinearDiscriminantAnalysis` approximates PDA via the `shrinkage` parameter:
     - `shrinkage=None`: standard MLE covariance estimate.
     - `shrinkage='auto'`: Ledoit-Wolf analytical shrinkage (§12.6).
-    - `shrinkage=t` for $t \in (0, 1]$: interpolate between sample and identity covariance:
-      $\hat{\Sigma}_{shrunk} = (1 - t)\hat{\Sigma} + t \cdot \text{tr}(\hat{\Sigma})/p \cdot I$
+    - `shrinkage=t` for $t \\in (0, 1]$: interpolate between sample and identity covariance:
+      $\\hat{\\Sigma}_{shrunk} = (1 - t)\\hat{\\Sigma} + t \\cdot \text{tr}(\\hat{\\Sigma})/p \\cdot I$
 
     Regularised covariance prevents near-singular estimates in high dimensions (p >> N).
     """

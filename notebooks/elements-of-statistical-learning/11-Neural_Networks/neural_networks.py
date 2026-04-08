@@ -163,10 +163,7 @@ def _(X, helpers, y):
         n_cv=5,
     )
     fig_arch.show()
-    print(
-        f"Best architecture: {arch_summary['best_arch']} | "
-        f"CV accuracy: {arch_summary['best_cv_accuracy']:.3%}"
-    )
+    print(f"Best architecture: {arch_summary['best_arch']} | CV accuracy: {arch_summary['best_cv_accuracy']:.3%}")
     return
 
 

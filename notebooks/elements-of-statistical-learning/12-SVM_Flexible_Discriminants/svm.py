@@ -100,9 +100,7 @@ def _(mo):
 
 @app.cell
 def _(X, helpers, y):
-    fig_cost, cost_summary = helpers.svm_cost_figure(
-        X, y, C_values=[0.01, 0.1, 1.0, 10.0, 100.0], kernel="rbf"
-    )
+    fig_cost, cost_summary = helpers.svm_cost_figure(X, y, C_values=[0.01, 0.1, 1.0, 10.0, 100.0], kernel="rbf")
     fig_cost.show()
     print(
         f"Best C: {cost_summary['best_C']} | "
@@ -136,14 +134,9 @@ def _(mo):
 
 @app.cell
 def _(X, helpers, y):
-    fig_kernel, kernel_summary = helpers.svm_kernel_figure(
-        X, y, kernels=["linear", "poly", "rbf", "sigmoid"], C=1.0
-    )
+    fig_kernel, kernel_summary = helpers.svm_kernel_figure(X, y, kernels=["linear", "poly", "rbf", "sigmoid"], C=1.0)
     fig_kernel.show()
-    print(
-        f"Best kernel: {kernel_summary['best_kernel']} | "
-        f"CV accuracy: {kernel_summary['best_cv_accuracy']:.3%}"
-    )
+    print(f"Best kernel: {kernel_summary['best_kernel']} | CV accuracy: {kernel_summary['best_cv_accuracy']:.3%}")
     return
 
 
