@@ -62,6 +62,8 @@ extra-paths = [
     "notebooks/elements-of-statistical-learning/8-Model_Inference",
     "notebooks/elements-of-statistical-learning/9-Additive_Models_Trees",
     "notebooks/elements-of-statistical-learning/10-Boosting",
+    "notebooks/elements-of-statistical-learning/11-Neural_Networks",
+    "notebooks/elements-of-statistical-learning/12-SVM_Flexible_Discriminants",
 ]
 
 [tool.pytest.ini_options]
@@ -118,6 +120,6 @@ ignore = [
 preview = true
 
 [tool.deptry]
-known_first_party = ["financial_machine_learning", "helpers", "ch3_helpers", "ch4_helpers", "ch5_helpers", "ch6_helpers", "ch7_helpers", "ch8_helpers", "ch9_helpers", "ch10_helpers"]
+known_first_party = ["financial_machine_learning", "helpers", "ch3_helpers", "ch4_helpers", "ch5_helpers", "ch6_helpers", "ch7_helpers", "ch8_helpers", "ch9_helpers", "ch10_helpers", "ch11_helpers", "ch12_helpers"]
 extend_exclude = ["docs"]
 github_output = true
