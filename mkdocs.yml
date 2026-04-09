@@ -1,7 +1,7 @@
-site_name: financial-machine-learning
+site_name: Financial Machine Learning
 repo_url: https://github.com/tkm212bc/financial-machine-learning
 site_url: https://tkm212bc.github.io/financial-machine-learning
-site_description: This is a project for notebooks for advances in financial machine learning
+site_description: Notebooks for Advances in Financial Machine Learning and Elements of Statistical Learning
 site_author: tkm
 edit_uri: edit/main/docs/
 repo_name: tkm212bc/financial-machine-learning
@@ -9,17 +9,22 @@ copyright: Maintained by <a href="https://tkm212bc.com">tkm212bc</a>.
 
 nav:
   - Home: index.md
-  - Modules: modules.md
+  - Notebooks: notebooks.md
+  - API Reference: modules.md
+
 plugins:
   - search
   - mkdocstrings:
       handlers:
         python:
-          paths: ["src/financial_machine_learning"]
+          paths: ["src"]
+
 theme:
   name: material
-  feature:
-    tabs: true
+  features:
+    - navigation.tabs
+    - navigation.top
+    - content.code.copy
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
@@ -50,3 +55,11 @@ markdown_extensions:
       permalink: true
   - pymdownx.arithmatex:
       generic: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+
+extra_javascript:
+  - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
