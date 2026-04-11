@@ -44,9 +44,9 @@ def _(mo):
     Eigenvectors (loadings) capture the directions of maximum variance; the first PC represents
     the dominant shared signal across bar types and can serve as a composite feature.
 
-    Note: López de Prado (Ch. 2) discusses Marchenko–Pastur denoising to separate signal from
-    noise eigenvalues. That technique requires fitting the Marchenko–Pastur distribution to the
-    eigenvalue spectrum — this notebook implements plain PCA without the denoising step.
+    Note: López de Prado (Ch. 2) discusses Marchenko-Pastur denoising to separate signal from
+    noise eigenvalues. That technique requires fitting the Marchenko-Pastur distribution to the
+    eigenvalue spectrum - this notebook implements plain PCA without the denoising step.
     """)
     return
 
