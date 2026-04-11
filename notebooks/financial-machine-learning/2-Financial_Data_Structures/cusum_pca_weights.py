@@ -40,7 +40,13 @@ def _(mo):
     mo.md(r"""
     ## PCA Weights
 
-    López de Prado uses PCA for covariance denoising (e.g. Marchenko-Pastur). Eigenvectors (loadings) of the correlation matrix yield principal component weights. We apply PCA to returns from multiple bar types to extract a denoised composite signal.
+    Principal component weights derived from the correlation matrix of returns across bar types.
+    Eigenvectors (loadings) capture the directions of maximum variance; the first PC represents
+    the dominant shared signal across bar types and can serve as a composite feature.
+
+    Note: López de Prado (Ch. 2) discusses Marchenko-Pastur denoising to separate signal from
+    noise eigenvalues. That technique requires fitting the Marchenko-Pastur distribution to the
+    eigenvalue spectrum - this notebook implements plain PCA without the denoising step.
     """)
     return
 

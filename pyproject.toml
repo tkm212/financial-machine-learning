@@ -1,26 +1,31 @@
 [project]
 name = "financial-machine-learning"
 version = "0.0.1"
-description = "This is a project for notebooks for advances in financial machine learning"
-authors = [{ name = "tkm", email = "xy@gmail.com" }]
+description = "Python library and notebooks for Advances in Financial Machine Learning (López de Prado) and Elements of Statistical Learning"
+authors = [{ name = "tkm" }]
 readme = "README.md"
-keywords = ['python']
-requires-python = ">=3.14,<4.0"
+keywords = ["finance", "machine learning", "quantitative finance", "time series", "financial data"]
+requires-python = ">=3.11"
 classifiers = [
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Science/Research",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.14",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Scientific/Engineering",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
     "numpy>=2.0.0",
     "pandas>=3.0.1",
-    "plotly>=5.24.0",
+    "marimo>=0.22.3",
     "scikit-learn>=1.6.0",
     "scipy>=1.13.0",
+    "plotly>=5.24.0",
     "kagglehub>=0.3.0",
-    "marimo>=0.13.0",
 ]
 
 [project.urls]
@@ -31,15 +36,15 @@ Documentation = "https://tkm212bc.github.io/financial-machine-learning/"
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
+    "pytest-cov>=6.0.0",
     "pre-commit>=4.5.1",
     "tox-uv>=1.29.0",
-    "deptry>=0.24.0",
+    "deptry>=0.25.1",
     "ty>=0.0.14",
     "ruff>=0.14.14",
     "mkdocs>=1.6.1",
     "mkdocs-material>=9.7.1",
     "mkdocstrings[python]>=1.0.2",
-    "marimo>=0.22.3",
 ]
 
 [build-system]
@@ -68,6 +73,22 @@ extra-paths = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = ["--cov", "--cov-report=term-missing", "--cov-report=xml"]
+
+[tool.coverage.run]
+source = ["financial_machine_learning"]
+branch = true
+omit = ["*/esl_loaders.py"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "@overload",
+]
 
 [tool.ruff]
 target-version = "py314"
@@ -123,3 +144,5 @@ preview = true
 known_first_party = ["financial_machine_learning", "helpers", "ch3_helpers", "ch4_helpers", "ch5_helpers", "ch6_helpers", "ch7_helpers", "ch8_helpers", "ch9_helpers", "ch10_helpers", "ch11_helpers", "ch12_helpers"]
 extend_exclude = ["docs"]
 github_output = true
+[tool.deptry.package_module_name_map]
+scikit-learn = "sklearn"

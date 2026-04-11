@@ -98,7 +98,7 @@ def main() -> int:
     parser.add_argument(
         "--no-index",
         action="store_true",
-        help="Do not write the datetime index to the output CSV",
+        help="Do not write the row index to the output CSV (datetime is a column, not the index)",
     )
     parser.add_argument(
         "-v",

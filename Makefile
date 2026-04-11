@@ -16,9 +16,9 @@ check: ## Run code quality tools.
 	@uv run deptry .
 
 .PHONY: test
-test: ## Test the code with pytest
+test: ## Test the code with pytest and coverage
 	@echo "🚀 Testing code: Running pytest"
-	@uv run python -m pytest --doctest-modules
+	@uv run python -m pytest
 
 .PHONY: build
 build: clean-build ## Build wheel file

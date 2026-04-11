@@ -171,7 +171,7 @@ def _(mo):
 @app.cell
 def _(dollar_b, go, make_subplots, pd, tick_b, time_bars_df, vol_b):
     def returns(bars: pd.DataFrame) -> pd.Series:
-        return _bars["close"].pct_change().dropna()
+        return bars["close"].pct_change().dropna()
 
     _fig = make_subplots(
         rows=2,

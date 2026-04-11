@@ -30,7 +30,7 @@ repos:
         types: [python]
         pass_filenames: false
 
-  - repo: https://github.com/fpgmaas/deptry.git
-    rev: "0.24.0"
+  - repo: https://github.com/osprey-oss/deptry.git
+    rev: "0.25.1"
     hooks:
       - id: deptry
