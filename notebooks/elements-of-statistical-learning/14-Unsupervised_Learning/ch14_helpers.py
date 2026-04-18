@@ -161,14 +161,15 @@ def kmeans_elbow_figure(
     fig = make_subplots(rows=1, cols=2, subplot_titles=["WCSS (elbow method)", "Silhouette score"])
     fig.add_trace(
         go.Scatter(x=k_values, y=inertias, mode="lines+markers", name="WCSS", line={"color": "steelblue"}),
-        row=1, col=1,
+        row=1,
+        col=1,
     )
     fig.add_trace(
         go.Scatter(x=k_values, y=silhouettes, mode="lines+markers", name="Silhouette", line={"color": "tomato"}),
-        row=1, col=2,
+        row=1,
+        col=2,
     )
-    fig.add_vline(x=best_k, line_dash="dash", line_color="grey", row=1, col=2,
-                  annotation_text=f"best K={best_k}")
+    fig.add_vline(x=best_k, line_dash="dash", line_color="grey", row=1, col=2, annotation_text=f"best K={best_k}")
     fig.update_layout(
         title="K-means: elbow and silhouette vs K — §14.3.6",
         template="plotly_white",
@@ -200,7 +201,7 @@ def kmeans_centroid_figure(
     """
     Visualise K-means cluster centroids as a heatmap (§14.3.6).
 
-    After fitting with K clusters, the centroid matrix $M \in \mathbb{R}^{K \times p}$
+    After fitting with K clusters, the centroid matrix $M \\in \\mathbb{R}^{K \times p}$
     has row $k$ = the mean of all points in cluster $k$.
 
     Plotting $M$ as a heatmap (features on x-axis, clusters on y-axis) reveals:
@@ -228,7 +229,7 @@ def kmeans_centroid_figure(
         go.Heatmap(
             z=centroids,
             x=feats,
-            y=[f"Cluster {c+1} (n={sizes[c]})" for c in range(k)],
+            y=[f"Cluster {c + 1} (n={sizes[c]})" for c in range(k)],
             colorscale="RdBu_r",
             zmid=0,
             colorbar={"title": "std. deviations"},
@@ -439,15 +440,17 @@ def pca_variance_figure(
     fig = make_subplots(rows=1, cols=2, subplot_titles=["Proportion of variance explained", "Cumulative PVE"])
     fig.add_trace(
         go.Bar(x=comp_idx, y=list(pve), name="PVE", marker_color="steelblue"),
-        row=1, col=1,
+        row=1,
+        col=1,
     )
     fig.add_trace(
-        go.Scatter(x=comp_idx, y=list(cumulative), mode="lines+markers",
-                   name="Cumulative PVE", line={"color": "tomato"}),
-        row=1, col=2,
+        go.Scatter(
+            x=comp_idx, y=list(cumulative), mode="lines+markers", name="Cumulative PVE", line={"color": "tomato"}
+        ),
+        row=1,
+        col=2,
     )
-    fig.add_hline(y=0.90, line_dash="dash", line_color="grey",
-                  annotation_text="90%", row=1, col=2)
+    fig.add_hline(y=0.90, line_dash="dash", line_color="grey", annotation_text="90%", row=1, col=2)
     fig.update_layout(
         title="PCA scree plot — §14.5",
         template="plotly_white",
@@ -478,7 +481,7 @@ def pca_biplot_figure(
     pc_y: int = 2,
     max_rows: int = 500,
 ) -> go.Figure:
-    """
+    r"""
     PCA biplot: scores (observations) and loadings (features) on the first two PCs (§14.5.1).
 
     A **biplot** superimposes:
@@ -518,10 +521,14 @@ def pca_biplot_figure(
         lx = loadings[pc_x - 1, j] * scale
         ly = loadings[pc_y - 1, j] * scale
         fig.add_annotation(
-            x=lx, y=ly,
-            ax=0, ay=0,
-            xref="x", yref="y",
-            axref="x", ayref="y",
+            x=lx,
+            y=ly,
+            ax=0,
+            ay=0,
+            xref="x",
+            yref="y",
+            axref="x",
+            ayref="y",
             text=feat,
             showarrow=True,
             arrowhead=2,
@@ -531,8 +538,8 @@ def pca_biplot_figure(
 
     fig.update_layout(
         title=f"PCA biplot (PC{pc_x} vs PC{pc_y}) — §14.5.1",
-        xaxis_title=f"PC{pc_x} ({pca.explained_variance_ratio_[pc_x-1]:.1%} var)",
-        yaxis_title=f"PC{pc_y} ({pca.explained_variance_ratio_[pc_y-1]:.1%} var)",
+        xaxis_title=f"PC{pc_x} ({pca.explained_variance_ratio_[pc_x - 1]:.1%} var)",
+        yaxis_title=f"PC{pc_y} ({pca.explained_variance_ratio_[pc_y - 1]:.1%} var)",
         template="plotly_white",
     )
     return fig
@@ -554,7 +561,7 @@ def nmf_rank_figure(
     NMF reconstruction error vs rank r (§14.6).
 
     **Non-negative Matrix Factorization** (Lee & Seung 1999) factorises $X \approx WH$
-    where $W \in \mathbb{R}_{\geq 0}^{N \times r}$ and $H \in \mathbb{R}_{\geq 0}^{r \times p}$.
+    where $W \\in \\mathbb{R}_{\\geq 0}^{N \times r}$ and $H \\in \\mathbb{R}_{\\geq 0}^{r \times p}$.
 
     Unlike PCA, the non-negativity constraint enforces **parts-based** representations:
     each observation is a non-negative combination of $r$ non-negative basis vectors.

@@ -102,9 +102,7 @@ def _(mo):
 
 @app.cell
 def _(X, helpers, y):
-    fig_proto, proto_summary = helpers.kmeans_prototype_figure(
-        X, y, R_values=[1, 2, 3, 5, 8, 10]
-    )
+    fig_proto, proto_summary = helpers.kmeans_prototype_figure(X, y, R_values=[1, 2, 3, 5, 8, 10])
     fig_proto.show()
     print(
         f"Best R: {proto_summary['best_R']} | "
@@ -136,9 +134,7 @@ def _(mo):
 
 @app.cell
 def _(X, helpers, y):
-    fig_cmp, cmp_summary = helpers.lvq_vs_knn_figure(
-        X, y, k_values=[1, 3, 5, 10, 20], R_values=[1, 2, 3, 5, 8]
-    )
+    fig_cmp, cmp_summary = helpers.lvq_vs_knn_figure(X, y, k_values=[1, 3, 5, 10, 20], R_values=[1, 2, 3, 5, 8])
     fig_cmp.show()
     print(
         f"Best KNN: k={cmp_summary['best_knn_k']} accuracy={cmp_summary['best_knn']:.3%} | "

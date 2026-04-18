@@ -92,9 +92,7 @@ def _(mo):
 
 @app.cell
 def _(X, helpers, y):
-    fig_k, k_summary = helpers.knn_k_selection_figure(
-        X, y, k_values=[1, 3, 5, 7, 10, 15, 20, 30, 50]
-    )
+    fig_k, k_summary = helpers.knn_k_selection_figure(X, y, k_values=[1, 3, 5, 7, 10, 15, 20, 30, 50])
     fig_k.show()
     print(f"Best k: {k_summary['best_k']} | CV accuracy: {k_summary['best_cv_accuracy']:.3%}")
     return
@@ -130,10 +128,7 @@ def _(X, helpers, y):
         X, y, k=5, metrics=["euclidean", "manhattan", "chebyshev", "cosine"]
     )
     fig_metric.show()
-    print(
-        f"Best metric: {metric_summary['best_metric']} | "
-        f"CV accuracy: {metric_summary['best_cv_accuracy']:.3%}"
-    )
+    print(f"Best metric: {metric_summary['best_metric']} | CV accuracy: {metric_summary['best_cv_accuracy']:.3%}")
     return
 
 

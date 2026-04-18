@@ -9,10 +9,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.model_selection import cross_val_score, train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import cross_val_score
 from sklearn.tree import DecisionTreeClassifier
 
 
@@ -285,7 +283,10 @@ def rf_max_features_figure(
 
         scores = cross_val_score(
             RandomForestClassifier(n_estimators=n_estimators, max_features=mf, random_state=0, n_jobs=-1),
-            x_arr, y_cls, cv=n_cv, scoring="accuracy",
+            x_arr,
+            y_cls,
+            cv=n_cv,
+            scoring="accuracy",
         )
         cv_accs.append(float(scores.mean()))
         cv_stds.append(float(scores.std()))
@@ -461,7 +462,10 @@ def rf_tree_depth_figure(
             RandomForestClassifier(
                 n_estimators=n_estimators, max_features="sqrt", max_depth=depth, random_state=0, n_jobs=-1
             ),
-            x_arr, y_cls, cv=n_cv, scoring="accuracy",
+            x_arr,
+            y_cls,
+            cv=n_cv,
+            scoring="accuracy",
         )
         cv_accs.append(float(scores.mean()))
         cv_stds.append(float(scores.std()))

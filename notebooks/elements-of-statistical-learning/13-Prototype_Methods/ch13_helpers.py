@@ -13,7 +13,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import cross_val_score, train_test_split
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import StandardScaler
 
 
 def find_project_root(max_up: int = 12) -> Path:
@@ -381,9 +381,7 @@ def lvq_vs_knn_figure(
     # --- KNN accuracies ---
     knn_accs: list[float] = []
     for k in k_values:
-        scores = cross_val_score(
-            KNeighborsClassifier(n_neighbors=k), x_all, y_all, cv=skf, scoring="accuracy"
-        )
+        scores = cross_val_score(KNeighborsClassifier(n_neighbors=k), x_all, y_all, cv=skf, scoring="accuracy")
         knn_accs.append(float(scores.mean()))
 
     # --- Prototype accuracies ---

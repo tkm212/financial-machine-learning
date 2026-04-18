@@ -105,7 +105,8 @@ def _(mo):
 @app.cell
 def _(X, helpers, y):
     fig_oob, oob_summary = helpers.rf_oob_figure(
-        X, y,
+        X,
+        y,
         n_estimators_values=[10, 25, 50, 100, 200, 300],
         max_features_options=["sqrt", "log2", 1],
     )
@@ -180,7 +181,8 @@ def _(mo):
 @app.cell
 def _(X, helpers, y):
     fig_mf, mf_summary = helpers.rf_max_features_figure(
-        X, y,
+        X,
+        y,
         n_estimators=200,
         max_features_options=[1, 2, "sqrt", "log2", None],
     )
@@ -214,7 +216,8 @@ def _(mo):
 @app.cell
 def _(X, helpers, y):
     fig_depth, depth_summary = helpers.rf_tree_depth_figure(
-        X, y,
+        X,
+        y,
         n_estimators=200,
         max_depth_values=[1, 2, 3, 5, 8, None],
     )
