@@ -236,7 +236,7 @@ def rf_max_features_figure(
     feats: list[str] | None = None,
     *,
     n_estimators: int = 200,
-    max_features_options: list[str | int] | None = None,
+    max_features_options: list[str | int | None] | None = None,
     max_rows: int = 2000,
     n_cv: int = 5,
 ) -> tuple[go.Figure, dict[str, Any]]:

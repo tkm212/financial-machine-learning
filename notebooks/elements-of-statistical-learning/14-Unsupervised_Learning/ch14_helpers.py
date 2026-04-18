@@ -148,7 +148,8 @@ def kmeans_elbow_figure(
             continue
         km = KMeans(n_clusters=k_clamped, n_init=10, random_state=0)
         labels = km.fit_predict(x_arr)
-        inertias.append(float(km.inertia_))
+        inertia_val = km.inertia_
+        inertias.append(float(inertia_val) if inertia_val is not None else float("nan"))
         silhouettes.append(_safe_silhouette_score(x_arr, labels, sample_size=500, random_state=0))
 
     sil_arr = np.asarray(silhouettes, dtype=float)
