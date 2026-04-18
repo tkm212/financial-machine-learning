@@ -9,7 +9,7 @@
 Python library and [Marimo](https://marimo.io) notebooks covering two bodies of work:
 
 - **[Advances in Financial Machine Learning](https://www.wiley.com/en-us/Advances+in+Financial+Machine+Learning-p-9781119482086)** — López de Prado (2018): alternative bar types, CUSUM filtering, triple-barrier labeling, and sample weighting for financial time series.
-- **[Elements of Statistical Learning](https://hastie.su.domains/ElemStatLearn/)** — Hastie, Tibshirani & Friedman (2nd ed.): supervised learning through boosting, implemented across Chapters 2–12.
+- **[Elements of Statistical Learning](https://hastie.su.domains/ElemStatLearn/)** — Hastie, Tibshirani & Friedman (2nd ed.): supervised learning through random forests, implemented across Chapters 2–15.
 
 **[Documentation](https://tkm212bc.github.io/financial-machine-learning/) · [API Reference](https://tkm212bc.github.io/financial-machine-learning/modules/) · [Notebooks](https://tkm212bc.github.io/financial-machine-learning/notebooks/)**
 
@@ -76,6 +76,9 @@ uv run marimo run notebooks/financial-machine-learning/2-Financial_Data_Structur
 | 7–8 | Model assessment, bootstrap, bagging |
 | 9–10 | Additive models, decision trees, boosting |
 | 11–12 | Neural networks, SVMs, flexible discriminants |
+| 13 | Prototype methods (K-means, LVQ) and K-nearest-neighbors |
+| 14 | Unsupervised learning — clustering, PCA, NMF |
+| 15 | Random forests — OOB error, variable importance, tuning |
 
 ---
 
