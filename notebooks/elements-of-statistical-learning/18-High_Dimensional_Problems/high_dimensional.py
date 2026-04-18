@@ -106,6 +106,55 @@ def _(helpers):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    ## Marginal screening + lasso (§18)
+
+    **Independence / correlation screening**: rank features by marginal $|\mathrm{corr}(X_j, y)|$,
+    keep the top $k \approx 2N$ (Fan & Lv-style sure screening), then run **lasso** only on that
+    submatrix.  When the truth is sparse and marginal signal is informative, this two-stage
+    procedure can match or beat lasso on all $p$ columns with lower optimization cost.
+    """)
+    return
+
+
+@app.cell
+def _(helpers):
+    fig_scr, scr_info = helpers.marginal_screening_lasso_figure(n=90, p=400, n_nonzero=15, n_cv=5, random_state=0)
+    fig_scr.show()
+    print(
+        f"CV R² — lasso all features: {scr_info['r2_full']:.4f} | "
+        f"after screen k={scr_info['screen_k']}: {scr_info['r2_screened']:.4f}"
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Multiple testing: Bonferroni vs Benjamini-Hochberg (§18)
+
+    With $p$ marginal tests of $H_{0j}: \beta_j = 0$, uncorrected $\alpha$ yields many
+    **false positives** among null coordinates.  **Bonferroni** controls family-wise error;
+    **Benjamini-Hochberg** controls **false discovery rate** - often more power at the cost
+    of a different guarantee.  The simulation averages true/false positive counts over Monte
+    Carlo replicates.
+    """)
+    return
+
+
+@app.cell
+def _(helpers):
+    fig_fdr, fdr_info = helpers.fdr_vs_bonferroni_figure(
+        n_rep=40, n=100, p=220, n_signal=10, alpha=0.05, random_state=0
+    )
+    fig_fdr.show()
+    print("Mean TP (signals found):", fdr_info["mean_tp"])
+    print("Mean FP (nulls selected):", fdr_info["mean_fp"])
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## Real data + noise features (§18)
 
     TMDB movie regression (log revenue vs numeric features) is augmented with **Gaussian
@@ -118,13 +167,10 @@ def _(mo):
 
 @app.cell
 def _(INPUTS, helpers):
-    fig_tm, tm_info = helpers.tmdb_with_noise_features_figure(
-        INPUTS, n_noise=200, max_rows=600, n_cv=5, random_state=0
-    )
+    fig_tm, tm_info = helpers.tmdb_with_noise_features_figure(INPUTS, n_noise=200, max_rows=600, n_cv=5, random_state=0)
     fig_tm.show()
     print(
-        f"n={tm_info['n']}, p={tm_info['p']} | "
-        f"CV R² ridge={tm_info['r2_ridge']:.3f}, lasso={tm_info['r2_lasso']:.3f}"
+        f"n={tm_info['n']}, p={tm_info['p']} | CV R² ridge={tm_info['r2_ridge']:.3f}, lasso={tm_info['r2_lasso']:.3f}"
     )
     print(
         "Share of |coef| on noise columns — "

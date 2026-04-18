@@ -49,8 +49,8 @@ def _():
 
     import ch17_helpers as helpers
 
-    _root, _inputs, _outputs = helpers.init_paths()
-    return helpers
+    _root, INPUTS, _outputs = helpers.init_paths()
+    return helpers, INPUTS
 
 
 @app.cell(hide_code=True)
@@ -99,6 +99,50 @@ def _(helpers):
     fig_pc, pc_info = helpers.partial_correlation_figure(p=12, n=200, random_state=1)
     fig_pc.show()
     print(f"Graphical lasso alpha used: {pc_info['alpha']:.4f}")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Edge stability under bootstrap (§17.3)
+
+    We fix the penalty at the CV-chosen $\\alpha$ and refit **graphical lasso** on many
+    **bootstrap** samples of the same synthetic data.  The heatmap shows how often each
+    off-diagonal edge is selected (nonzero $|\\hat{\\Theta}_{jk}|$).  Stable edges are
+    bright; unstable ones are artefacts of sampling noise — the same stability idea used
+    in structure learning more broadly.
+    """)
+    return
+
+
+@app.cell
+def _(helpers):
+    fig_stab, stab_info = helpers.graphical_lasso_stability_figure(p=18, n=100, n_bootstrap=45, cv=5, random_state=0)
+    fig_stab.show()
+    print(f"Fixed alpha={stab_info['alpha_fixed']:.4f} | mean edge selection freq: {stab_info['mean_edge_freq']:.3f}")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## TMDB: partial correlations (small $p$, real data)
+
+    With only a handful of numeric movie features, $p \\ll n$ and a Gaussian graphical
+    model is **more plausible** than in huge-$p$ finance genomics settings — though
+    features are still not truly multivariate normal.  The estimated partial-correlation
+    heatmap is an exploratory view of **conditional associations** among budget, popularity,
+    runtime, and votes.
+    """)
+    return
+
+
+@app.cell
+def _(INPUTS, helpers):
+    fig_tm, tm_info = helpers.tmdb_precision_figure(INPUTS, max_rows=900, cv=5, random_state=0)
+    fig_tm.show()
+    print(f"n={tm_info['n']}, p={tm_info['p']} | graphical lasso alpha={tm_info['alpha']:.4f}")
     return
 
 

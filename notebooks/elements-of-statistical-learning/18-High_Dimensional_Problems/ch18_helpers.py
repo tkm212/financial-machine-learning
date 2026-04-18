@@ -9,6 +9,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from scipy import stats
 from sklearn.linear_model import ElasticNetCV, LassoCV, RidgeCV
 from sklearn.metrics import r2_score
 from sklearn.model_selection import cross_val_predict, cross_val_score
@@ -92,40 +94,34 @@ def highdim_regularization_comparison_figure(
     x, y, _beta_true = simulate_sparse_regression(n, p, n_nonzero, random_state=random_state)
 
     models: dict[str, Any] = {
-        f"RidgeCV ({n_cv}-fold)": Pipeline(
-            [
-                ("scale", StandardScaler()),
-                ("reg", RidgeCV(alphas=np.logspace(-3, 4, 60), cv=n_cv)),
-            ]
-        ),
-        f"LassoCV ({n_cv}-fold)": Pipeline(
-            [
-                ("scale", StandardScaler()),
-                (
-                    "reg",
-                    LassoCV(
-                        n_alphas=100,
-                        cv=n_cv,
-                        random_state=random_state,
-                        max_iter=5000,
-                    ),
+        f"RidgeCV ({n_cv}-fold)": Pipeline([
+            ("scale", StandardScaler()),
+            ("reg", RidgeCV(alphas=np.logspace(-3, 4, 60), cv=n_cv)),
+        ]),
+        f"LassoCV ({n_cv}-fold)": Pipeline([
+            ("scale", StandardScaler()),
+            (
+                "reg",
+                LassoCV(
+                    n_alphas=100,
+                    cv=n_cv,
+                    random_state=random_state,
+                    max_iter=5000,
                 ),
-            ]
-        ),
-        f"ElasticNetCV ({n_cv}-fold)": Pipeline(
-            [
-                ("scale", StandardScaler()),
-                (
-                    "reg",
-                    ElasticNetCV(
-                        l1_ratio=[0.3, 0.5, 0.7, 0.9, 0.95, 0.99],
-                        cv=n_cv,
-                        random_state=random_state,
-                        max_iter=5000,
-                    ),
+            ),
+        ]),
+        f"ElasticNetCV ({n_cv}-fold)": Pipeline([
+            ("scale", StandardScaler()),
+            (
+                "reg",
+                ElasticNetCV(
+                    l1_ratio=[0.3, 0.5, 0.7, 0.9, 0.95, 0.99],
+                    cv=n_cv,
+                    random_state=random_state,
+                    max_iter=5000,
                 ),
-            ]
-        ),
+            ),
+        ]),
     }
 
     names: list[str] = []
@@ -241,15 +237,11 @@ def tmdb_with_noise_features_figure(
     p_tot = x_aug.shape[1]
     n_samp = x_aug.shape[0]
 
-    ridge = Pipeline(
-        [("scale", StandardScaler()), ("reg", RidgeCV(alphas=np.logspace(-4, 5, 50), cv=n_cv))]
-    )
-    lasso = Pipeline(
-        [
-            ("scale", StandardScaler()),
-            ("reg", LassoCV(n_alphas=100, cv=n_cv, random_state=random_state, max_iter=8000)),
-        ]
-    )
+    ridge = Pipeline([("scale", StandardScaler()), ("reg", RidgeCV(alphas=np.logspace(-4, 5, 50), cv=n_cv))])
+    lasso = Pipeline([
+        ("scale", StandardScaler()),
+        ("reg", LassoCV(n_alphas=100, cv=n_cv, random_state=random_state, max_iter=8000)),
+    ])
 
     r2_ridge = float(cross_val_score(ridge, x_aug, y_log, cv=n_cv, scoring="r2", n_jobs=1).mean())
     r2_lasso = float(cross_val_score(lasso, x_aug, y_log, cv=n_cv, scoring="r2", n_jobs=1).mean())
@@ -285,4 +277,183 @@ def tmdb_with_noise_features_figure(
         "fraction_abs_coef_noise_lasso": noise_imp_l,
         "p": p_tot,
         "n": n_samp,
+    }
+
+
+def _safe_abs_corr(xj: np.ndarray, y: np.ndarray) -> float:
+    if float(np.std(xj)) < 1e-12 or float(np.std(y)) < 1e-12:
+        return 0.0
+    return float(np.abs(np.corrcoef(xj, y)[0, 1]))
+
+
+def _benjamini_hochberg_reject(pvals: np.ndarray, alpha: float) -> np.ndarray:
+    """Benjamini-Hochberg FDR control at level ``alpha`` (reject largest $k$ with $p_{(k)} \\le k\\alpha/m$)."""
+    m = len(pvals)
+    order = np.argsort(pvals)
+    sorted_p = pvals[order]
+    k = 0
+    for i in range(m, 0, -1):
+        if sorted_p[i - 1] <= (i * alpha / m):
+            k = i
+            break
+    rej = np.zeros(m, dtype=bool)
+    if k > 0:
+        rej[order[:k]] = True
+    return rej
+
+
+def marginal_screening_lasso_figure(
+    n: int = 90,
+    p: int = 400,
+    n_nonzero: int = 15,
+    *,
+    screen_k: int | None = None,
+    n_cv: int = 5,
+    random_state: int = 0,
+) -> tuple[go.Figure, dict[str, Any]]:
+    """
+    **Sure independence screening**-style step: rank features by marginal $|\\mathrm{corr}(X_j, y)|$,
+    keep the top $k$ (here $k \\approx 2n$), then fit **LassoCV** only on that submatrix (§18).
+
+    Compare out-of-fold $R^2$ to lasso on **all** $p$ features — screening reduces noise
+    dimensions when signal is sparse and marginal association helps.
+    """
+    x, y, _ = simulate_sparse_regression(n, p, n_nonzero, random_state=random_state)
+    if screen_k is None:
+        screen_k = min(2 * n, p)
+
+    cors = np.array([_safe_abs_corr(x[:, j], y) for j in range(p)])
+    top_idx = np.argsort(-cors)[:screen_k]
+
+    lasso_full = Pipeline([
+        ("scale", StandardScaler()),
+        (
+            "reg",
+            LassoCV(
+                n_alphas=80,
+                cv=n_cv,
+                random_state=random_state,
+                max_iter=5000,
+            ),
+        ),
+    ])
+    lasso_screen = Pipeline([
+        ("scale", StandardScaler()),
+        (
+            "reg",
+            LassoCV(
+                n_alphas=80,
+                cv=n_cv,
+                random_state=random_state,
+                max_iter=5000,
+            ),
+        ),
+    ])
+
+    y_hat_full = cross_val_predict(lasso_full, x, y, cv=n_cv, n_jobs=1)
+    y_hat_s = cross_val_predict(lasso_screen, x[:, top_idx], y, cv=n_cv, n_jobs=1)
+    r2_full = float(r2_score(y, y_hat_full))
+    r2_screen = float(r2_score(y, y_hat_s))
+
+    fig = go.Figure(
+        go.Bar(
+            x=[f"Lasso all p={p}", f"Lasso after screen (k={screen_k})"],
+            y=[r2_full, r2_screen],
+            marker_color=["steelblue", "green"],
+            text=[f"{r2_full:.3f}", f"{r2_screen:.3f}"],
+            textposition="auto",
+        )
+    )
+    fig.update_layout(
+        title=f"Marginal screening + lasso vs lasso on full X (n={n}) — §18",
+        yaxis_title=f"{n_cv}-fold CV R² (predicted)",
+        template="plotly_white",
+    )
+    return fig, {
+        "r2_full": r2_full,
+        "r2_screened": r2_screen,
+        "screen_k": screen_k,
+    }
+
+
+def fdr_vs_bonferroni_figure(
+    *,
+    n_rep: int = 40,
+    n: int = 100,
+    p: int = 220,
+    n_signal: int = 10,
+    alpha: float = 0.05,
+    random_state: int = 0,
+) -> tuple[go.Figure, dict[str, Any]]:
+    """
+    **Marginal** tests $H_{0j}: \\beta_j = 0$ from univariate regressions give $p$ $p$-values.
+    **Bonferroni** controls FWER at $\\alpha$; **Benjamini-Hochberg** controls FDR; uncorrected
+    $\\alpha$ inflates false positives under many tests (§18).
+
+    Monte Carlo: sparse $\\beta$, average true positives (signals discovered) and false positives
+    (null coordinates incorrectly selected).
+    """
+    tp_b: list[float] = []
+    fp_b: list[float] = []
+    tp_bh: list[float] = []
+    fp_bh: list[float] = []
+    tp_na: list[float] = []
+    fp_na: list[float] = []
+
+    for rep in range(n_rep):
+        x, y, beta = simulate_sparse_regression(n, p, n_signal, snr=4.0, random_state=random_state + rep)
+        true_set = {int(j) for j in np.flatnonzero(np.abs(beta) > 1e-12)}
+        pvals = np.array([float(stats.linregress(x[:, j], y).pvalue) for j in range(p)])
+
+        rej_b = pvals < (alpha / p)
+        rej_bh = _benjamini_hochberg_reject(pvals, alpha)
+        rej_na = pvals < alpha
+
+        for rej, tp_list, fp_list in (
+            (rej_b, tp_b, fp_b),
+            (rej_bh, tp_bh, fp_bh),
+            (rej_na, tp_na, fp_na),
+        ):
+            sel = {int(j) for j in np.flatnonzero(rej)}
+            tp_list.append(float(len(sel & true_set)))
+            fp_list.append(float(len(sel - true_set)))
+
+    methods = ["Bonferroni", "Benjamini-Hochberg", f"Uncorrected (alpha={alpha:g})"]
+    mean_tp = [
+        float(np.mean(tp_b)),
+        float(np.mean(tp_bh)),
+        float(np.mean(tp_na)),
+    ]
+    mean_fp = [
+        float(np.mean(fp_b)),
+        float(np.mean(fp_bh)),
+        float(np.mean(fp_na)),
+    ]
+
+    fig = make_subplots(
+        rows=1,
+        cols=2,
+        subplot_titles=("Mean true positives (signals found)", "Mean false positives (nulls selected)"),
+    )
+    fig.add_trace(
+        go.Bar(x=methods, y=mean_tp, marker_color="steelblue", showlegend=False),
+        row=1,
+        col=1,
+    )
+    fig.add_trace(
+        go.Bar(x=methods, y=mean_fp, marker_color="tomato", showlegend=False),
+        row=1,
+        col=2,
+    )
+    fig.update_layout(
+        title_text=(f"Marginal tests: multiple testing (n={n}, p={p}, {n_signal} signals, {n_rep} reps) — §18"),
+        template="plotly_white",
+        height=400,
+    )
+    fig.update_yaxes(title_text="count", row=1, col=1)
+    fig.update_yaxes(title_text="count", row=1, col=2)
+
+    return fig, {
+        "mean_tp": dict(zip(methods, mean_tp, strict=False)),
+        "mean_fp": dict(zip(methods, mean_fp, strict=False)),
     }

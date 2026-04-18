@@ -9,7 +9,7 @@ from typing import Any
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from sklearn.covariance import GraphicalLassoCV
+from sklearn.covariance import GraphicalLasso, GraphicalLassoCV
 from sklearn.preprocessing import StandardScaler
 
 
@@ -31,6 +31,33 @@ def init_paths() -> tuple[Path, Path, Path]:
     if str(root) not in sys.path:
         sys.path.insert(0, str(root))
     return root, root / "inputs", root / "outputs"
+
+
+def load_tmdb_numeric_features(
+    inputs_dir: Path,
+    *,
+    max_rows: int = 1000,
+    random_state: int = 0,
+) -> tuple[np.ndarray, list[str]]:
+    """
+    Numeric TMDB columns (log1p), for a **small-$p$** Gaussian graphical model demo.
+
+    Real movie features are not exactly multivariate normal; the plot is illustrative.
+    """
+    from financial_machine_learning.esl_loaders import load_tmdb_revenue_regression
+
+    x_df, _y, _ = load_tmdb_revenue_regression(inputs_dir)
+    feats = ["budget", "popularity", "runtime", "vote_average", "vote_count"]
+    feats = [f for f in feats if f in x_df.columns]
+    x_df = x_df[feats].select_dtypes(include=[np.number]).fillna(0.0)
+
+    if len(x_df) > max_rows:
+        rng = np.random.default_rng(random_state)
+        idx = rng.choice(len(x_df), size=max_rows, replace=False)
+        x_df = x_df.iloc[idx]
+
+    x_raw = np.log1p(np.maximum(x_df.values.astype(float), 0.0))
+    return x_raw, feats
 
 
 def sample_gaussian_precision(
@@ -195,3 +222,107 @@ def partial_correlation_figure(
         yaxis_title="feature",
     )
     return fig, {"alpha": float(gl.alpha_)}
+
+
+# ---------------------------------------------------------------------------
+# Edge stability (bootstrap) — §17.3
+# ---------------------------------------------------------------------------
+
+
+def graphical_lasso_stability_figure(
+    p: int = 18,
+    n: int = 100,
+    *,
+    n_bootstrap: int = 45,
+    cv: int = 5,
+    edge_eps: float = 1e-5,
+    random_state: int = 0,
+) -> tuple[go.Figure, dict[str, Any]]:
+    """
+    **Stability selection** (Meinshausen & Bühlmann; see ESL discussion of structure
+    uncertainty): refit graphical lasso on **bootstrap** resamples at a fixed penalty
+    (chosen once by CV on the full data).  The heatmap shows the **frequency** with which
+    each off-diagonal edge $| \\hat{\\Theta}_{jk} | > \\varepsilon$.
+    """
+    rng = np.random.default_rng(random_state)
+    x_raw, _omega, _ = sample_gaussian_precision(p, n, random_state=random_state)
+    x = StandardScaler().fit_transform(x_raw)
+
+    glcv = GraphicalLassoCV(cv=cv, n_jobs=1, max_iter=500)
+    glcv.fit(x)
+    alpha_sel = float(glcv.alpha_)
+
+    accum = np.zeros((p, p), dtype=float)
+    for _ in range(n_bootstrap):
+        idx = rng.integers(0, n, size=n)
+        xb = x[idx]
+        gl = GraphicalLasso(alpha=alpha_sel, max_iter=1000)
+        gl.fit(xb)
+        theta = np.asarray(gl.precision_, dtype=float)
+        off = np.abs(theta) > edge_eps
+        np.fill_diagonal(off, False)
+        accum += off.astype(float)
+
+    freq = accum / float(n_bootstrap)
+
+    fig = go.Figure(
+        go.Heatmap(
+            z=freq,
+            colorscale="Blues",
+            zmin=0.0,
+            zmax=1.0,
+            colorbar={"title": "freq."},
+        )
+    )
+    fig.update_layout(
+        title=(f"Edge stability (bootstrap, n={n_bootstrap}) at alpha={alpha_sel:.3f} — §17.3 (p={p})"),
+        template="plotly_white",
+        xaxis_title="feature",
+        yaxis_title="feature",
+    )
+    off_freq = freq.copy()
+    np.fill_diagonal(off_freq, 0.0)
+    return fig, {
+        "alpha_fixed": alpha_sel,
+        "mean_edge_freq": float(off_freq[np.triu_indices(p, k=1)].mean()),
+    }
+
+
+def tmdb_precision_figure(
+    inputs_dir: Path,
+    *,
+    max_rows: int = 900,
+    cv: int = 5,
+    random_state: int = 0,
+) -> tuple[go.Figure, dict[str, Any]]:
+    """
+    `GraphicalLassoCV` on **standardised** TMDB numeric features (small $p$).  Partial
+    correlations and precision are best interpreted when $p \\ll n$ and approximate
+    normality holds — here we only illustrate the machinery on real tabular data.
+    """
+    x_raw, feat_names = load_tmdb_numeric_features(inputs_dir, max_rows=max_rows, random_state=random_state)
+    x = StandardScaler().fit_transform(x_raw)
+    p = x.shape[1]
+
+    gl = GraphicalLassoCV(cv=cv, n_jobs=1, max_iter=500)
+    gl.fit(x)
+    theta = np.asarray(gl.precision_, dtype=float)
+    pc = partial_correlation_from_precision(theta)
+
+    fig = go.Figure(
+        go.Heatmap(
+            z=pc,
+            x=feat_names,
+            y=feat_names,
+            colorscale="RdBu",
+            zmid=0.0,
+            zmin=-1.0,
+            zmax=1.0,
+            colorbar={"title": "partial corr."},
+        )
+    )
+    fig.update_layout(
+        title=f"TMDB: partial correlations from graphical lasso (p={p}, n={len(x)}) — §17.3",
+        template="plotly_white",
+    )
+    return fig, {"alpha": float(gl.alpha_), "n": len(x), "p": p}

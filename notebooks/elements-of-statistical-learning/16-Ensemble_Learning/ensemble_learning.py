@@ -117,6 +117,58 @@ def _(X, helpers, y):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    ## Diversity of base errors (§16.1)
+
+    For each base learner we form **out-of-fold** class predictions and indicator mistakes
+    $e_m(i) = \mathbf{1}[\hat{y}_m(i) \neq y_i]$.  The correlation matrix of
+    $(e_1, \ldots, e_M)$ measures whether models fail on the **same** examples.
+
+    Lower off-diagonal correlation implies more **complementary** errors — the regime where
+    ensembles and stacking have the most to gain over any single model.
+    """)
+    return
+
+
+@app.cell
+def _(X, helpers, y):
+    fig_div, div_info = helpers.base_error_correlation_figure(X, y, n_cv=5)
+    fig_div.show()
+    print(f"Mean |off-diagonal| correlation of mistake indicators: {div_info['mean_abs_offdiag']:.3f}")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Regression: voting vs stacking (§16.2)
+
+    The same ensemble ideas apply to **regression**: `VotingRegressor` averages base
+    predictions; `StackingRegressor` learns a ridge meta-model on out-of-fold base outputs.
+    Target: TMDB **log revenue** vs the usual numeric features (log-scaled).
+    """)
+    return
+
+
+@app.cell
+def _(INPUTS, helpers):
+    X_reg, y_reg, target_reg = helpers.load_tmdb_regression_xy(INPUTS)
+    print(f"Regression sample: {len(X_reg):,} rows | target: {target_reg!r}")
+    return X_reg, y_reg
+
+
+@app.cell
+def _(X_reg, helpers, y_reg):
+    fig_reg, reg_stack = helpers.regression_stacking_figure(X_reg, y_reg, n_cv=5)
+    fig_reg.show()
+    print(f"Best: {reg_stack['best_method']} | CV R² = {reg_stack['best_r2']:.4f}")
+    for name, r2 in reg_stack["results"].items():
+        print(f"  {name:<28}: {r2:.4f}")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## Relation to earlier chapters
 
     | Idea | ESL reference | Role in ensembles |
