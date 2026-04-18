@@ -63,6 +63,12 @@ Source path: `notebooks/elements-of-statistical-learning/`
 | 8 | Model Inference | `em_algorithm.py`, `bagging.py` |
 | 9 | Additive Models & Trees | `additive_models.py`, `decision_trees.py` |
 | 10 | Boosting | `boosting.py`, `gradient_boosting.py` |
+| 13 | Prototype Methods | `nearest_neighbors.py`, `prototype_methods.py` |
+| 14 | Unsupervised Learning | `principal_components.py`, `clustering.py` |
+| 15 | Random Forests | `random_forests.py` |
+| 16 | Ensemble Learning | `ensemble_learning.py` |
+| 17 | Undirected Graphical Models | `graphical_models.py` |
+| 18 | High-Dimensional Problems | `high_dimensional.py` |
 
 Each chapter folder also contains a `ch{N}_helpers.py` module with dataset
 loading and plotting utilities shared across that chapter's notebooks.

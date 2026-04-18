@@ -69,6 +69,12 @@ extra-paths = [
     "notebooks/elements-of-statistical-learning/10-Boosting",
     "notebooks/elements-of-statistical-learning/11-Neural_Networks",
     "notebooks/elements-of-statistical-learning/12-SVM_Flexible_Discriminants",
+    "notebooks/elements-of-statistical-learning/13-Prototype_Methods",
+    "notebooks/elements-of-statistical-learning/14-Unsupervised_Learning",
+    "notebooks/elements-of-statistical-learning/15-Random_Forests",
+    "notebooks/elements-of-statistical-learning/16-Ensemble_Learning",
+    "notebooks/elements-of-statistical-learning/17-Undirected_Graphical_Models",
+    "notebooks/elements-of-statistical-learning/18-High_Dimensional_Problems",
 ]
 
 [tool.pytest.ini_options]
@@ -141,7 +147,7 @@ ignore = [
 preview = true
 
 [tool.deptry]
-known_first_party = ["financial_machine_learning", "helpers", "ch3_helpers", "ch4_helpers", "ch5_helpers", "ch6_helpers", "ch7_helpers", "ch8_helpers", "ch9_helpers", "ch10_helpers", "ch11_helpers", "ch12_helpers", "ch13_helpers", "ch14_helpers", "ch15_helpers"]
+known_first_party = ["financial_machine_learning", "helpers", "ch3_helpers", "ch4_helpers", "ch5_helpers", "ch6_helpers", "ch7_helpers", "ch8_helpers", "ch9_helpers", "ch10_helpers", "ch11_helpers", "ch12_helpers", "ch13_helpers", "ch14_helpers", "ch15_helpers", "ch16_helpers", "ch17_helpers", "ch18_helpers"]
 extend_exclude = ["docs"]
 github_output = true
 [tool.deptry.package_module_name_map]
