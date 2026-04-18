@@ -16,7 +16,7 @@ def _(mo):
     mo.md(r"""
     # Principal Components and NMF — ESL Ch. 14
 
-    *Hastie, Tibshirani & Friedman (2009). The Elements of Statistical Learning. §14.5–14.6.*
+    *Hastie, Tibshirani & Friedman (2009). The Elements of Statistical Learning. §14.5-14.6.*
 
     ## Principal Component Analysis (§14.5)
 
@@ -102,7 +102,7 @@ def _(X, helpers):
     fig_scree, scree_summary = helpers.pca_variance_figure(X)
     fig_scree.show()
     print(f"Components for 90% variance: {scree_summary['n_components_for_90pct']}")
-    for i, (pve, cum) in enumerate(zip(scree_summary["pve"], scree_summary["cumulative_pve"]), 1):
+    for i, (pve, cum) in enumerate(zip(scree_summary["pve"], scree_summary["cumulative_pve"], strict=True), 1):
         print(f"  PC{i}: PVE={pve:.3%}  cumulative={cum:.3%}")
     return
 
@@ -165,7 +165,7 @@ def _(X, helpers):
     fig_nmf, nmf_summary = helpers.nmf_rank_figure(X, ranks=list(range(1, 6)))
     fig_nmf.show()
     print("NMF reconstruction errors:")
-    for r, err in zip(nmf_summary["ranks"], nmf_summary["errors"]):
+    for r, err in zip(nmf_summary["ranks"], nmf_summary["errors"], strict=True):
         print(f"  r={r}: ||X - WH||_F = {err:.4f}")
     return
 

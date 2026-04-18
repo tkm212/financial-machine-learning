@@ -84,11 +84,7 @@ def _safe_silhouette_score(
         return float("nan")
     # Random subsampling can yield a single cluster even when full labels are valid;
     # sklearn then raises.  Prefer full score when n is moderate.
-    ss: int | None
-    if n_samples <= 2500:
-        ss = None
-    else:
-        ss = min(sample_size, n_samples)
+    ss: int | None = None if n_samples <= 2500 else min(sample_size, n_samples)
     try:
         return float(silhouette_score(X, labels, sample_size=ss, random_state=random_state))
     except ValueError:
@@ -153,10 +149,7 @@ def kmeans_elbow_figure(
         silhouettes.append(_safe_silhouette_score(x_arr, labels, sample_size=500, random_state=0))
 
     sil_arr = np.asarray(silhouettes, dtype=float)
-    if np.all(np.isnan(sil_arr)):
-        best_k = max(2, min(k_values[0], n_samples))
-    else:
-        best_k = k_values[int(np.nanargmax(sil_arr))]
+    best_k = max(2, min(k_values[0], n_samples)) if np.all(np.isnan(sil_arr)) else k_values[int(np.nanargmax(sil_arr))]
     best_k = int(max(2, min(best_k, n_samples)))
 
     fig = make_subplots(rows=1, cols=2, subplot_titles=["WCSS (elbow method)", "Silhouette score"])
@@ -301,7 +294,7 @@ def hierarchical_linkage_figure(
     dcoord = np.array(dg["dcoord"])
 
     fig = go.Figure()
-    for xs, ys in zip(icoord, dcoord):
+    for xs, ys in zip(icoord, dcoord, strict=True):
         fig.add_trace(
             go.Scatter(
                 x=xs,

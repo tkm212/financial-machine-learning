@@ -16,7 +16,7 @@ def _(mo):
     mo.md(r"""
     # Random Forests — ESL Ch. 15
 
-    *Hastie, Tibshirani & Friedman (2009). The Elements of Statistical Learning. §15.1–15.4.*
+    *Hastie, Tibshirani & Friedman (2009). The Elements of Statistical Learning. §15.1-15.4.*
 
     ## Definition of random forests (§15.2)
 
@@ -97,7 +97,7 @@ def _(mo):
     1. OOB error decreases monotonically and **stabilises** — forests don't overfit with more trees.
     2. Smaller $m$ gives lower error at small $B$ (more decorrelation) but potentially higher
        asymptotic error if individual trees become too weak (too few features per split).
-    3. The plateau occurs around $B = 100$–$200$; additional trees rarely improve further.
+    3. The plateau occurs around $B = 100$-$200$; additional trees rarely improve further.
     """)
     return
 
@@ -201,7 +201,7 @@ def _(mo):
     ESL recommends growing trees to **full depth** (no pruning) in random forests.
     The intuition: each deep tree has low bias; the ensemble average reduces variance.
 
-    Shallow trees (stumps, depth 2–3) have high bias — even perfect de-correlation
+    Shallow trees (stumps, depth 2-3) have high bias — even perfect de-correlation
     cannot compensate for individual-tree underfitting.
 
     This contrasts with **boosting** (§10.3), where shallow trees (stumps or depth ≤ 3)

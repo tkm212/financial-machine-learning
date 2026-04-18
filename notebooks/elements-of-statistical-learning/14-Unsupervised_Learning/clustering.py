@@ -75,7 +75,7 @@ def _():
 
 @app.cell
 def _(INPUTS, helpers):
-    X, y, target = helpers.load_tmdb_xy(INPUTS)
+    X, _y, target = helpers.load_tmdb_xy(INPUTS)
     print(f"Loaded {len(X):,} rows | target: {target!r}")
     return (X,)
 
