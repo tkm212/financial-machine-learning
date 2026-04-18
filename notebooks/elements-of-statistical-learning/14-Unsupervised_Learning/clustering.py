@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.22.3"
+__generated_with = "0.23.1"
 app = marimo.App()
 
 
@@ -77,7 +77,7 @@ def _():
 def _(INPUTS, helpers):
     X, y, target = helpers.load_tmdb_xy(INPUTS)
     print(f"Loaded {len(X):,} rows | target: {target!r}")
-    return X, y
+    return (X,)
 
 
 @app.cell(hide_code=True)
@@ -107,9 +107,9 @@ def _(X, helpers):
     fig_elbow, elbow_summary = helpers.kmeans_elbow_figure(X, k_values=list(range(2, 10)))
     fig_elbow.show()
     print(f"Best K by silhouette: {elbow_summary['best_K_silhouette']}")
-    for k_val, sil in elbow_summary["silhouettes"].items():
-        print(f"  K={k_val}: silhouette={sil:.4f}, WCSS={elbow_summary['inertias'][k_val]:.1f}")
-    return elbow_summary
+    for k_val, sil_k in elbow_summary["silhouettes"].items():
+        print(f"  K={k_val}: silhouette={sil_k:.4f}, WCSS={elbow_summary['inertias'][k_val]:.1f}")
+    return (elbow_summary,)
 
 
 @app.cell(hide_code=True)
@@ -136,7 +136,7 @@ def _(X, elbow_summary, helpers):
     fig_centroids, centroid_info = helpers.kmeans_centroid_figure(X, k=best_k)
     fig_centroids.show()
     print(f"K={best_k} cluster sizes: {centroid_info['cluster_sizes']}")
-    return best_k
+    return (best_k,)
 
 
 @app.cell(hide_code=True)
@@ -191,8 +191,8 @@ def _(X, best_k, helpers):
     fig_link, link_summary = helpers.linkage_comparison_figure(X, k=best_k)
     fig_link.show()
     print(f"Best linkage: {link_summary['best_method']} | silhouette: {link_summary['best_silhouette']:.4f}")
-    for method, sil in link_summary["results"].items():
-        print(f"  {method:<10}: {sil:.4f}")
+    for method, sil_link in link_summary["results"].items():
+        print(f"  {method:<10}: {sil_link:.4f}")
     return
 
 

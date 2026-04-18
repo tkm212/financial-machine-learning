@@ -186,8 +186,8 @@ def _(X, helpers, y):
     )
     fig_mf.show()
     print(f"Best max_features: {mf_summary['best_max_features']} | CV accuracy: {mf_summary['best_cv_accuracy']:.3%}")
-    for setting, acc in mf_summary["results"].items():
-        print(f"  {setting:<22}: {acc:.3%}")
+    for setting, mf_acc in mf_summary["results"].items():
+        print(f"  {setting:<22}: {mf_acc:.3%}")
     return
 
 
@@ -249,8 +249,8 @@ def _(X, helpers, y):
     fig_cmp, cmp_summary = helpers.rf_comparison_figure(X, y, n_estimators=200)
     fig_cmp.show()
     print(f"Best method: {cmp_summary['best_method']} | CV accuracy: {cmp_summary['best_cv_accuracy']:.3%}")
-    for method, acc in cmp_summary["results"].items():
-        print(f"  {method:<30}: {acc:.3%}")
+    for method, cmp_acc in cmp_summary["results"].items():
+        print(f"  {method:<30}: {cmp_acc:.3%}")
     return
 
 

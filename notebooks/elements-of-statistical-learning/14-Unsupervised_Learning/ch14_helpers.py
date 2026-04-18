@@ -65,6 +65,36 @@ def _prepare_arrays(
     return x_sub
 
 
+def _safe_silhouette_score(
+    X: np.ndarray,
+    labels: np.ndarray,
+    *,
+    sample_size: int = 500,
+    random_state: int = 0,
+) -> float:
+    """
+    Wrap :func:`silhouette_score` when sklearn's preconditions hold.
+
+    sklearn requires ``1 < n_unique_labels < n_samples`` (i.e. at least two clusters and
+    not every point in its own cluster).  Otherwise return ``nan`` instead of raising.
+    """
+    n_samples = X.shape[0]
+    n_labels = len(np.unique(labels))
+    if n_samples < 3 or not (1 < n_labels < n_samples):
+        return float("nan")
+    # Random subsampling can yield a single cluster even when full labels are valid;
+    # sklearn then raises.  Prefer full score when n is moderate.
+    ss: int | None
+    if n_samples <= 2500:
+        ss = None
+    else:
+        ss = min(sample_size, n_samples)
+    try:
+        return float(silhouette_score(X, labels, sample_size=ss, random_state=random_state))
+    except ValueError:
+        return float("nan")
+
+
 # ---------------------------------------------------------------------------
 # K-means: elbow and silhouette (§14.3.6)
 # ---------------------------------------------------------------------------
@@ -105,20 +135,28 @@ def kmeans_elbow_figure(
     x_arr = _prepare_arrays(X, feats, max_rows=max_rows)
     scaler = StandardScaler()
     x_arr = scaler.fit_transform(x_arr)
+    n_samples = x_arr.shape[0]
 
     inertias: list[float] = []
     silhouettes: list[float] = []
 
     for k in k_values:
-        km = KMeans(n_clusters=k, n_init=10, random_state=0)
+        k_clamped = min(k, n_samples)
+        if k_clamped < 2:
+            inertias.append(float("nan"))
+            silhouettes.append(float("nan"))
+            continue
+        km = KMeans(n_clusters=k_clamped, n_init=10, random_state=0)
         labels = km.fit_predict(x_arr)
         inertias.append(float(km.inertia_))
-        if k >= 2:
-            silhouettes.append(float(silhouette_score(x_arr, labels, sample_size=500, random_state=0)))
-        else:
-            silhouettes.append(float("nan"))
+        silhouettes.append(_safe_silhouette_score(x_arr, labels, sample_size=500, random_state=0))
 
-    best_k = k_values[int(np.argmax(silhouettes))]
+    sil_arr = np.asarray(silhouettes, dtype=float)
+    if np.all(np.isnan(sil_arr)):
+        best_k = max(2, min(k_values[0], n_samples))
+    else:
+        best_k = k_values[int(np.nanargmax(sil_arr))]
+    best_k = int(max(2, min(best_k, n_samples)))
 
     fig = make_subplots(rows=1, cols=2, subplot_titles=["WCSS (elbow method)", "Silhouette score"])
     fig.add_trace(
@@ -312,15 +350,18 @@ def linkage_comparison_figure(
     x_arr = _prepare_arrays(X, feats, max_rows=max_rows)
     scaler = StandardScaler()
     x_arr = scaler.fit_transform(x_arr)
+    n_samples = x_arr.shape[0]
+    # silhouette_score requires 1 < n_labels < n_samples; fcluster(..., t=1) yields one label.
+    k_eff = int(max(2, min(int(k), max(2, n_samples - 1))))
 
     silhouettes: list[float] = []
     for method in methods:
         Z = linkage(x_arr, method=method)
-        labels = fcluster(Z, t=k, criterion="maxclust")
-        sil = float(silhouette_score(x_arr, labels, sample_size=500, random_state=0))
-        silhouettes.append(sil)
+        labels = fcluster(Z, t=k_eff, criterion="maxclust")
+        silhouettes.append(_safe_silhouette_score(x_arr, labels, sample_size=500, random_state=0))
 
-    best_idx = int(np.argmax(silhouettes))
+    sil_arr = np.asarray(silhouettes, dtype=float)
+    best_idx = int(np.nanargmax(sil_arr)) if np.any(np.isfinite(sil_arr)) else 0
     colors = ["steelblue", "tomato", "green", "orange"]
 
     fig = go.Figure(
@@ -328,20 +369,24 @@ def linkage_comparison_figure(
             x=methods,
             y=silhouettes,
             marker_color=colors[: len(methods)],
-            name=f"silhouette (K={k})",
+            name=f"silhouette (K={k_eff})",
         )
     )
+    finite = sil_arr[np.isfinite(sil_arr)]
+    y_lo = float(np.nanmin(finite)) - 0.05 if finite.size else -0.2
+    y_hi = float(np.nanmax(finite)) + 0.05 if finite.size else 1.0
     fig.update_layout(
-        title=f"Hierarchical linkage comparison: silhouette score (K={k}) — §14.3.12",
+        title=f"Hierarchical linkage comparison: silhouette score (K={k_eff}) — §14.3.12",
         xaxis_title="linkage method",
         yaxis_title="silhouette score",
-        yaxis={"range": [max(0.0, min(silhouettes) - 0.05), min(1.0, max(silhouettes) + 0.05)]},
+        yaxis={"range": [max(-1.0, y_lo), min(1.0, y_hi)]},
         template="plotly_white",
     )
     return fig, {
         "best_method": methods[best_idx],
-        "best_silhouette": silhouettes[best_idx],
+        "best_silhouette": float(sil_arr[best_idx]) if np.isfinite(sil_arr[best_idx]) else float("nan"),
         "results": dict(zip(methods, silhouettes, strict=False)),
+        "k_used": k_eff,
     }
 
 
