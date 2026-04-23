@@ -18,9 +18,13 @@ def _(mo):
 
     *Hastie, Tibshirani & Friedman (2009). The Elements of Statistical Learning. §17.1-17.3.*
 
-    An **undirected graphical model** (Markov random field) encodes conditional independence
-    structure in a multivariate distribution via an **interaction graph**: missing edges
-    correspond to conditional independences.
+    An **undirected graphical model** (Markov random field) encodes **conditional
+    independences** in a multivariate distribution.  The **graph** $G$ has a node for each
+    variable; if $(j,k) \\notin E$ then (under mild positivity conditions) $X_j$ and $X_k$
+    are **conditionally independent** given all other coordinates — the local / global
+    **Markov** properties.  The **Hammersley-Clifford theorem** links such factorisations
+    to **clique potentials** for strictly positive mass functions (ESL §17.2-17.2.2; here
+    we focus on the **Gaussian** case).
 
     ## Gaussian graphical models (§17.3)
 
@@ -50,7 +54,7 @@ def _():
     import ch17_helpers as helpers
 
     _root, INPUTS, _outputs = helpers.init_paths()
-    return helpers, INPUTS
+    return INPUTS, helpers
 
 
 @app.cell(hide_code=True)
@@ -84,6 +88,28 @@ def _(helpers):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    ## Sparsity of $\hat{\Theta}$ vs penalty (§17.3.1)
+
+    Like the lasso for regression, the **graphical lasso** trades off fit against how many
+    **non-zeros** appear in the estimated precision.  The curve below (synthetic $p$-vector
+    data) shows how the number of off-diagonals in $\hat{\Theta}(\alpha)$ with
+    $|\cdot|>\varepsilon$ grows as $\alpha$ sweeps.  The dashed line marks the
+    **cross-validated** $\alpha$ from `GraphicalLassoCV` on the same draw.
+    """)
+    return
+
+
+@app.cell
+def _(helpers):
+    fig_sp, sp = helpers.graphical_lasso_edge_count_vs_alpha_figure(p=20, n=120, n_alphas=45, random_state=0)
+    fig_sp.show()
+    print(f"At CV alpha: {sp['alpha_cv']:.4f} | selected edges: {sp['n_edges_at_cv']}")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## Partial correlations (§17.3.2)
 
     The **partial correlation** between $X_j$ and $X_k$ given the remaining variables is
@@ -105,11 +131,36 @@ def _(helpers):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    ## Marginal vs **partial** association on real data (§17.3.2)
+
+    **Correlation** is easy to read but conflates **direct** and **indirect** links.
+    **Partial** correlations, derived from $\hat{\Theta}$, approximate **correlation
+    after** conditioning on the other variables — a building block of the GMRF interpretation.
+    The left panel is the usual sample matrix; the right is from the same TMDB
+    `StandardScaler`'d matrix with CV-tuned `GraphicalLassoCV` (a single focused partial
+    heatmap is the right column here).  With only a few numeric features, $p \ll n$ and a
+    Gaussian model is more plausible than in genomics-scale $p$; still, movie variables are
+    not exactly normal — treat the plot as **exploratory conditioning structure**.
+    """)
+    return
+
+
+@app.cell
+def _(INPUTS, helpers):
+    fig_pair, pr = helpers.tmdb_correlation_and_partial_panels_figure(INPUTS, max_rows=900, cv=5, random_state=0)
+    fig_pair.show()
+    print(f"alpha_hat = {pr['alpha']:.4f} | n = {pr['n']}, p = {pr['p']}")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## Edge stability under bootstrap (§17.3)
 
     We fix the penalty at the CV-chosen $\\alpha$ and refit **graphical lasso** on many
     **bootstrap** samples of the same synthetic data.  The heatmap shows how often each
-    off-diagonal edge is selected (nonzero $|\\hat{\\Theta}_{jk}|$).  Stable edges are
+    off-diagonal edge is selected (nonzero $|\hat{\Theta}_{jk}|$).  Stable edges are
     bright; unstable ones are artefacts of sampling noise — the same stability idea used
     in structure learning more broadly.
     """)
@@ -127,22 +178,23 @@ def _(helpers):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## TMDB: partial correlations (small $p$, real data)
+    ## Network sketch: edges from $|\hat{\Theta}_{jk}|$ (TMDB) (§17.1)
 
-    With only a handful of numeric movie features, $p \\ll n$ and a Gaussian graphical
-    model is **more plausible** than in huge-$p$ finance genomics settings — though
-    features are still not truly multivariate normal.  The estimated partial-correlation
-    heatmap is an exploratory view of **conditional associations** among budget, popularity,
-    runtime, and votes.
+    A **graph** is not only a heatmap.  The figure places variables on a circle; line
+    segments connect $(j,k)$ when $|\hat{\Theta}_{jk}|$ (off-diagonal precision) is
+    among the larger quantiles.  The layout is a **visual** aid, not a unique embedding; use
+    the stability and CV machinery above to judge **which** edges to trust.
     """)
     return
 
 
 @app.cell
 def _(INPUTS, helpers):
-    fig_tm, tm_info = helpers.tmdb_precision_figure(INPUTS, max_rows=900, cv=5, random_state=0)
-    fig_tm.show()
-    print(f"n={tm_info['n']}, p={tm_info['p']} | graphical lasso alpha={tm_info['alpha']:.4f}")
+    fig_g, ginfo = helpers.network_sketch_from_precision_figure(INPUTS, max_rows=900, cv=5, edge_weight_quantile=0.5)
+    fig_g.show()
+    print(
+        f"Edges drawn: {ginfo['n_edges_drawn']} | |Theta| threshold = {ginfo['threshold']:.4f} | alpha_hat = {ginfo['alpha']:.4f}"
+    )
     return
 
 

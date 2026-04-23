@@ -19,7 +19,13 @@ def _(mo):
     *Hastie, Tibshirani & Friedman (2009). The Elements of Statistical Learning. §16.1-16.2.*
 
     Chapter 16 synthesises **bagging**, **random forests**, and **boosting** under one view:
-    ensembles reduce variance (bagging, RF) or bias (boosting) by combining many learners.
+    ensembles **reduce variance** (bagging, RF) by averaging unstable learners, or **reduce
+    bias** (boosting) by sequentially fitting to residuals — see also Ch. 8 (model averaging),
+    Ch. 10 (gradient boosting), and Ch. 15 (random forest details).
+
+    This notebook focuses on **model combination**: voting, **stacking** (learned
+    level-1 model), and **diversity** of base errors, using TMDB data where the pattern of
+    gains is more important than a benchmark score.
 
     ## Stacking (§16.2)
 
@@ -66,6 +72,41 @@ def _(INPUTS, helpers):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    ## From one tree to bagging to random forest (Ch. 8, 15, §16.1)
+
+    A **single full-depth decision tree** fits training data well but is **high variance**:
+    small data perturbations can change the decision boundary a lot. **Bagging** draws many
+    bootstrap training sets, fits a tree on each, and **averages** predictions — variance
+    drops while the shape of a typical tree remains. **Random forests** add **feature
+    randomisation** at each split, reducing correlation between trees so the average is
+    more effective (full detail in the Ch. 15 companion notebook).
+
+    The first figure compares $B$-tree **bagging** to $B$-tree **RF** (both $B=100$) on
+    the same design matrix.  The second shows how **OOB (out-of-bag) error** of an RF
+    falls as the forest grows, illustrating **diminishing returns** for extra trees.
+    """)
+    return
+
+
+@app.cell
+def _(X, helpers, y):
+    fig_tbf, tbf = helpers.tree_bagging_rf_figure(X, y, n_cv=5)
+    fig_tbf.show()
+    print(f"Best: {tbf['best']} | acc ≈ {tbf['best_acc']:.3%}")
+    return
+
+
+@app.cell
+def _(X, helpers, y):
+    fig_oob, oob_info = helpers.oob_error_vs_n_trees_figure(X, y, random_state=0)
+    fig_oob.show()
+    print(f"Final 1-OOB (rough OOB error est.): {oob_info['final_oob_1minus']:.4f}")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## Stacking vs soft voting vs base learners (§16.2)
 
     We fit three diverse level-0 classifiers — **logistic regression**, **random forest**,
@@ -88,6 +129,33 @@ def _(X, helpers, y):
     print(f"Best method: {ens_summary['best_method']} | CV accuracy: {ens_summary['best_cv_accuracy']:.3%}")
     for name, acc in ens_summary["results"].items():
         print(f"  {name:<35}: {acc:.3%}")
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## What does the **meta-learner** learn? (§16.2)
+
+    Stacking fits a model on **out-of-fold** level-0 outputs $Z_m(x)$.  For classification,
+    we use each base model's estimated **positive-class probability** as a 3D meta-feature
+    and fit a **logistic** meta-learner: this is a transparent stand-in for
+    `StackingClassifier(..., stack_method="predict_proba")`.
+
+    Coefficients are on **log-odds** scale.  Larger $|\tilde{w}_m|$ means the meta-model
+    relies more on base $m$'s calibrated probabilitiy after seeing **joint** behaviour
+    on OOF data — not a simple average.
+    """)
+    return
+
+
+@app.cell
+def _(X, helpers, y):
+    fig_w, w_info = helpers.stacking_meta_learned_weights_figure(X, y, n_cv=5)
+    fig_w.show()
+    for k, v in w_info["meta_coefs"].items():
+        print(f"  meta weight [{k:>6}]: {v:+.4f}")
+    print(f"  intercept: {w_info['intercept']:.4f}")
     return
 
 

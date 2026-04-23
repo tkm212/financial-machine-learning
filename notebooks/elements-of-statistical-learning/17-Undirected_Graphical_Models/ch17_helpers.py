@@ -326,3 +326,206 @@ def tmdb_precision_figure(
         template="plotly_white",
     )
     return fig, {"alpha": float(gl.alpha_), "n": len(x), "p": p}
+
+
+# ---------------------------------------------------------------------------
+# Correlation vs partial correlation (TMDB); graph sketch from precision
+# ---------------------------------------------------------------------------
+
+
+def tmdb_correlation_and_partial_panels_figure(
+    inputs_dir: Path,
+    *,
+    max_rows: int = 900,
+    cv: int = 5,
+    random_state: int = 0,
+) -> tuple[go.Figure, dict[str, Any]]:
+    """
+    Side-by-side **sample correlation** and **partial correlation** (from `GraphicalLassoCV`).
+
+    Marginal correlation can be **large** when two features share a confounder; partial
+    correlation removes the linear effect of all other features — a closer match to the
+    **conditional** associations encoded by the Markov network (§17.3.2).
+    """
+    x_raw, feat_names = load_tmdb_numeric_features(inputs_dir, max_rows=max_rows, random_state=random_state)
+    x = StandardScaler().fit_transform(x_raw)
+    n, p = x.shape
+
+    emp_corr = np.corrcoef(x.T)
+    gl = GraphicalLassoCV(cv=cv, n_jobs=1, max_iter=500)
+    gl.fit(x)
+    prec = np.asarray(gl.precision_, dtype=float)
+    pcorr = partial_correlation_from_precision(prec)
+    fig = make_subplots(
+        rows=1,
+        cols=2,
+        subplot_titles=("Sample correlation", "Partial correlation (from Θ̂, graphical lasso)"),
+        horizontal_spacing=0.10,
+    )
+    zc = 1.0
+    zpc = 1.0
+    fig.add_trace(
+        go.Heatmap(
+            z=emp_corr,
+            x=feat_names,
+            y=feat_names,
+            colorscale="RdBu",
+            zmid=0.0,
+            zmin=-zc,
+            zmax=zc,
+            showscale=True,
+        ),
+        row=1,
+        col=1,
+    )
+    fig.add_trace(
+        go.Heatmap(
+            z=pcorr,
+            x=feat_names,
+            y=feat_names,
+            colorscale="RdBu",
+            zmid=0.0,
+            zmin=-zpc,
+            zmax=zpc,
+            showscale=True,
+        ),
+        row=1,
+        col=2,
+    )
+    fig.update_layout(
+        title_text=(f"TMDB: correlation vs partial correlation (n={n}, p={p}, alpha_hat = {float(gl.alpha_):.4f}) — §17.3"),
+        template="plotly_white",
+        height=450,
+    )
+    return fig, {"alpha": float(gl.alpha_), "n": n, "p": p}
+
+
+def network_sketch_from_precision_figure(
+    inputs_dir: Path,
+    *,
+    max_rows: int = 900,
+    cv: int = 5,
+    edge_weight_quantile: float = 0.5,
+    random_state: int = 0,
+) -> tuple[go.Figure, dict[str, Any]]:
+    """
+    Turn an estimated **precision matrix** into a simple **undirected graph** sketch (§17.2-17.3).
+
+    Nodes are placed on a circle.  An edge is drawn if $|\\hat{\\Theta}_{jk}|$ exceeds a
+    **quantile** threshold over off-diagonals, so a fixed number of (presumably) strongest
+    associations appear.  This is for **visualising structure** — not a replacement for
+    formal structure learning or **stability** selection (earlier in this chapter).
+    """
+    x_raw, feat_names = load_tmdb_numeric_features(inputs_dir, max_rows=max_rows, random_state=random_state)
+    x = StandardScaler().fit_transform(x_raw)
+    p = x.shape[1]
+    gl = GraphicalLassoCV(cv=cv, n_jobs=1, max_iter=500)
+    gl.fit(x)
+    theta = np.asarray(gl.precision_, dtype=float)
+    w = np.abs(theta).copy()
+    np.fill_diagonal(w, 0.0)
+    triu = w[np.triu_indices(p, k=1)]
+    thresh = float(np.quantile(triu, edge_weight_quantile)) if triu.size else 0.0
+    ang = 2.0 * np.pi * (np.arange(p) + 0.0) / p
+    xn = np.cos(ang)
+    yn = np.sin(ang)
+
+    fig = go.Figure()
+    n_edges = 0
+    for a in range(p):
+        for b in range(a + 1, p):
+            if w[a, b] < thresh or abs(theta[a, b]) < 1e-12:
+                continue
+            n_edges += 1
+            fig.add_trace(
+                go.Scatter(
+                    x=[xn[a], xn[b]],
+                    y=[yn[a], yn[b]],
+                    mode="lines",
+                    line={"color": "rgba(80, 80, 120, 0.55)", "width": 2.0},
+                    showlegend=False,
+                    hoverinfo="skip",
+                )
+            )
+    fig.add_trace(
+        go.Scatter(
+            x=xn,
+            y=yn,
+            mode="markers+text",
+            marker={"size": 20, "color": "white", "line": {"width": 1.2, "color": "#1f77b4"}},
+            text=feat_names,
+            textposition="top center",
+            name="",
+            showlegend=False,
+        )
+    )
+    fig.update_layout(
+        title=(
+            f"TMDB Markov network sketch: edges with |Θ̂| ≥ q_{edge_weight_quantile:.2f} off-diagonals (n={len(x)}, p={p})"
+        ),
+        xaxis_title="",
+        yaxis_title="",
+        xaxis={"visible": False, "zeroline": False, "showgrid": False, "scaleanchor": "y", "scaleratio": 1},
+        yaxis={"visible": False, "zeroline": False, "showgrid": False},
+        template="plotly_white",
+        height=480,
+    )
+    return fig, {"alpha": float(gl.alpha_), "n_edges_drawn": n_edges, "threshold": thresh}
+
+
+def graphical_lasso_edge_count_vs_alpha_figure(
+    p: int = 20,
+    n: int = 120,
+    *,
+    n_alphas: int = 40,
+    random_state: int = 0,
+) -> tuple[go.Figure, dict[str, Any]]:
+    """
+    For synthetic Gaussian data, count **selected edges** (nonzero $|\\Theta_{jk}|$ off-diagonals
+    in the graphical-lasso fit) as the penalty **decreases** (alpha increases along x with log scale).
+
+    Analogous in spirit to the lasso *coefficient* path: sparser Θ̂ for large penalty,
+    denser graph for small penalty (with PD constraint); §17.3.1.
+    """
+    x_raw, _omega_true, _ = sample_gaussian_precision(p, n, random_state=random_state)
+    x = StandardScaler().fit_transform(x_raw)
+    glcv = GraphicalLassoCV(cv=5, n_jobs=1, max_iter=500)
+    glcv.fit(x)
+    alpha_max = float(max(glcv.alpha_, 0.1))
+    alphas = np.logspace(-2, np.log10(alpha_max + 1e-4), n_alphas)
+    n_edges: list[int] = []
+    for a in alphas:
+        g = GraphicalLasso(alpha=float(a), max_iter=2000)
+        try:
+            g.fit(x)
+        except FloatingPointError, ValueError:
+            n_edges.append(0)
+            continue
+        th = np.asarray(g.precision_, dtype=float)
+        off = th - np.diag(np.diag(th))
+        n_edges.append(int(np.sum(np.abs(off) > 1e-4)))
+    # CV-chosen as vertical line
+    a_cv = float(glcv.alpha_)
+
+    gcv = GraphicalLasso(alpha=a_cv, max_iter=2000)
+    gcv.fit(x)
+    thc = np.asarray(gcv.precision_, dtype=float)
+    offc = thc - np.diag(np.diag(thc))
+    n_at_cv = int(np.sum(np.abs(offc) > 1e-4))
+
+    fig = go.Figure(
+        go.Scatter(
+            x=alphas,
+            y=n_edges,
+            mode="lines+markers",
+        )
+    )
+    fig.add_vline(x=a_cv, line_dash="dash", line_color="gray", annotation_text="CV alpha", annotation_position="top")
+    fig.update_layout(
+        title=f"Graphical lasso: number of selected edges vs alpha (p={p}, n={n}) — §17.3.1",
+        xaxis_title="alpha (penalty; log scale)",
+        yaxis_title="number of |Θ̂ⱼₖ|>ε, j≠k",
+        template="plotly_white",
+        xaxis_type="log",
+    )
+    return fig, {"alpha_cv": a_cv, "n_edges_at_cv": n_at_cv}

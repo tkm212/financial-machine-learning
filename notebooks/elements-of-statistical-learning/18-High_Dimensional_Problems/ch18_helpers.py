@@ -103,7 +103,7 @@ def highdim_regularization_comparison_figure(
             (
                 "reg",
                 LassoCV(
-                    n_alphas=100,
+                    alphas=100,
                     cv=n_cv,
                     random_state=random_state,
                     max_iter=5000,
@@ -184,7 +184,7 @@ def lasso_path_sparsity_figure(
     xs = StandardScaler().fit_transform(x)
 
     alphas, coefs, _ = lasso_path(xs, y, alphas=None, max_iter=5000)
-    # coefs shape (n_features, n_alphas)
+    # coefs shape (n_features, n_alpha grid points)
     n_nonzeros = [int(np.sum(np.abs(coefs[:, j]) > 1e-8)) for j in range(coefs.shape[1])]
 
     fig = go.Figure(
@@ -240,7 +240,7 @@ def tmdb_with_noise_features_figure(
     ridge = Pipeline([("scale", StandardScaler()), ("reg", RidgeCV(alphas=np.logspace(-4, 5, 50), cv=n_cv))])
     lasso = Pipeline([
         ("scale", StandardScaler()),
-        ("reg", LassoCV(n_alphas=100, cv=n_cv, random_state=random_state, max_iter=8000)),
+        ("reg", LassoCV(alphas=100, cv=n_cv, random_state=random_state, max_iter=8000)),
     ])
 
     r2_ridge = float(cross_val_score(ridge, x_aug, y_log, cv=n_cv, scoring="r2", n_jobs=1).mean())
@@ -330,7 +330,7 @@ def marginal_screening_lasso_figure(
         (
             "reg",
             LassoCV(
-                n_alphas=80,
+                alphas=80,
                 cv=n_cv,
                 random_state=random_state,
                 max_iter=5000,
@@ -342,7 +342,7 @@ def marginal_screening_lasso_figure(
         (
             "reg",
             LassoCV(
-                n_alphas=80,
+                alphas=80,
                 cv=n_cv,
                 random_state=random_state,
                 max_iter=5000,
@@ -457,3 +457,138 @@ def fdr_vs_bonferroni_figure(
         "mean_tp": dict(zip(methods, mean_tp, strict=False)),
         "mean_fp": dict(zip(methods, mean_fp, strict=False)),
     }
+
+
+# ---------------------------------------------------------------------------
+# Curse of dimensionality; recovery plot (§18.1, §18.2)
+# ---------------------------------------------------------------------------
+
+
+def curse_of_dimensionality_volume_figure(
+    d_max: int = 50,
+) -> tuple[go.Figure, dict[str, Any]]:
+    r"""
+    **Empty neighbourhoods** in high dimension (§18.1): a hypercube of side length
+    $1 - \varepsilon$ in $[0,1]^d$ occupies **fraction** $(1-\varepsilon)^d$ of the unit
+    hypercube volume, which decays to $0$ as $d$ grows.  A fixed fraction of the mass lives
+    in a thin “shell” near the surface — the geometric intuition for why *local* methods
+    (kernel regression with a fixed bandwidth, naive nearest neighbour with fixed $k$) are
+    stressed unless $N$ is enormous in $d$.
+    """
+    eps = 0.05
+    d = np.arange(1, d_max + 1, dtype=int)
+    frac_inner = (1.0 - eps) ** d
+
+    fig = go.Figure(
+        go.Scatter(
+            x=d,
+            y=frac_inner,
+            mode="lines+markers",
+            name=f"(1-eps)^d, eps={eps}",
+        )
+    )
+    fig.update_layout(
+        title="Curse of dimensionality: (1-eps)^d volume in [0,1]^d (eps=0.05) — §18.1",
+        xaxis_title="dimension d",
+        yaxis_title="volume fraction of inner cube of side 1-eps",
+        template="plotly_white",
+    )
+    return fig, {"epsilon": eps, "at_d_30": float((1.0 - eps) ** 30)}
+
+
+def lasso_true_vs_fitted_figure(
+    n: int = 60,
+    p: int = 120,
+    n_nonzero: int = 10,
+    *,
+    random_state: int = 0,
+) -> tuple[go.Figure, dict[str, Any]]:
+    r"""
+    **Sparse recovery** view (§18.2-18.3): for one simulated $p \gg n$ design, compare
+    **true** $\beta$ to the **LassoCV** fit on the full sample (after `StandardScaler`).
+
+    Points on the 45° line are perfect recovery.  Lasso will often zero out small signals;
+    spurious **non-zeros** can appear for correlated columns.
+    """
+    x, y, beta = simulate_sparse_regression(n, p, n_nonzero, snr=4.0, random_state=random_state)
+    xs = StandardScaler().fit_transform(x)
+    lcv = LassoCV(alphas=80, cv=5, random_state=random_state, max_iter=5000)
+    lcv.fit(xs, y)
+    hat = lcv.coef_.ravel()
+
+    hit = (np.abs(beta) > 1e-12) | (np.abs(hat) > 1e-8)
+    fig = go.Figure()
+    if np.any(hit):
+        fig.add_trace(
+            go.Scatter(
+                x=beta[hit],
+                y=hat[hit],
+                mode="markers",
+                marker={"size": 6, "opacity": 0.65, "color": "steelblue"},
+            )
+        )
+    fig.add_trace(
+        go.Scatter(
+            x=[float(beta.min()), float(beta.max())],
+            y=[float(beta.min()), float(beta.max())],
+            mode="lines",
+            line={"dash": "dash", "color": "gray"},
+            name="y = x (perfect recovery)",
+        )
+    )
+    fig.update_layout(
+        title="True β vs lasso fit (one simulation, p≫n) — §18.3",
+        xaxis_title="true βⱼ",
+        yaxis_title="lasso β̂ⱼ",
+        template="plotly_white",
+    )
+    r_rec = float(np.corrcoef(beta, hat)[0, 1]) if np.var(beta) > 0 and np.var(hat) > 0 else 0.0
+    return fig, {"lasso_r_correlation_true_hat": r_rec, "n_nonzero_true": int(n_nonzero)}
+
+
+def ridge_vs_lasso_coefficient_magnitude_figure(
+    n: int = 50,
+    p: int = 100,
+    n_nonzero: int = 8,
+    *,
+    random_state: int = 0,
+) -> tuple[go.Figure, dict[str, Any]]:
+    r"""
+    For the same $y = X\beta + \epsilon$, compare **magnitudes** of fitted coefficients
+    after `StandardScaler` — **ridge** (all $p$ get mass) vs **lasso** (exact zeros) — §18.2-18.3.
+    """
+    x, y, _beta = simulate_sparse_regression(n, p, n_nonzero, snr=3.5, random_state=random_state)
+    xs = StandardScaler().fit_transform(x)
+
+    ridge = RidgeCV(alphas=np.logspace(-3, 4, 50), cv=5)
+    lcv = LassoCV(alphas=80, cv=5, random_state=random_state, max_iter=5000)
+    ridge.fit(xs, y)
+    lcv.fit(xs, y)
+    r_coef = np.abs(ridge.coef_.ravel())
+    l_coef = np.abs(lcv.coef_.ravel())
+    idx = np.argsort(-np.maximum(r_coef, l_coef))[: min(30, p)]
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=list(range(len(idx))),
+            y=r_coef[idx],
+            mode="lines+markers",
+            name="Ridge |coef| (sorted by max)",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=list(range(len(idx))),
+            y=l_coef[idx],
+            mode="lines+markers",
+            name="Lasso |coef|",
+        )
+    )
+    fig.update_layout(
+        title="Top-30 (by max |coef|) features: ridge vs lasso (p > n) — §18.2-18.3",
+        xaxis_title="rank in sorted set",
+        yaxis_title="|coefficient|",
+        template="plotly_white",
+    )
+    return fig, {"n_nonzero_lasso": int(np.sum(l_coef > 1e-8))}

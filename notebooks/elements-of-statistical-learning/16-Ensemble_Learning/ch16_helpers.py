@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from sklearn.ensemble import (
+    BaggingClassifier,
     GradientBoostingClassifier,
     GradientBoostingRegressor,
     RandomForestClassifier,
@@ -21,6 +22,7 @@ from sklearn.ensemble import (
 )
 from sklearn.linear_model import LogisticRegression, Ridge
 from sklearn.model_selection import KFold, StratifiedKFold, cross_val_predict, cross_val_score
+from sklearn.tree import DecisionTreeClassifier
 
 
 def find_project_root(max_up: int = 12) -> Path:
@@ -434,4 +436,219 @@ def regression_stacking_figure(
         "best_method": names[best_idx],
         "best_r2": r2_vals[best_idx],
         "results": dict(zip(names, r2_vals, strict=False)),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Bagging / random forests: variance reduction vs a single tree (Ch. 8, 16)
+# ---------------------------------------------------------------------------
+
+
+def tree_bagging_rf_figure(
+    X: pd.DataFrame,
+    y: pd.Series,
+    feats: list[str] | None = None,
+    *,
+    max_rows: int = 2000,
+    n_cv: int = 5,
+    n_bootstrap_estimators: int = 100,
+    random_state: int = 0,
+) -> tuple[go.Figure, dict[str, Any]]:
+    """
+    Compare **unstable** high-variance base learners to **averaged** ensembles (§8.7, §16.1).
+
+    A **deep decision tree** has low bias but high variance. **Bagging** (bootstrap
+    aggregating) averages many such trees on random subsamples, reducing variance while
+    leaving bias similar.  **Random forests** further decorrelate trees by random feature
+    subsets at splits — the combination used in practice for tabular data (see Ch. 15).
+    """
+    x_arr, y_cls = _prepare_arrays(X, y, feats, max_rows=max_rows, random_state=random_state)
+
+    tree = DecisionTreeClassifier(
+        max_depth=None,
+        min_samples_split=2,
+        min_samples_leaf=1,
+        random_state=random_state,
+    )
+    bag = BaggingClassifier(
+        estimator=DecisionTreeClassifier(
+            max_depth=None,
+            min_samples_split=2,
+            min_samples_leaf=1,
+            random_state=random_state,
+        ),
+        n_estimators=n_bootstrap_estimators,
+        max_samples=1.0,
+        max_features=1.0,
+        n_jobs=1,
+        random_state=random_state,
+    )
+    rf = RandomForestClassifier(
+        n_estimators=n_bootstrap_estimators,
+        max_features="sqrt",
+        min_samples_leaf=1,
+        random_state=random_state,
+        n_jobs=1,
+    )
+
+    models: dict[str, Any] = {
+        "Single tree (deep)": tree,
+        f"Bagging (B={n_bootstrap_estimators}, full trees)": bag,
+        f"Random forest (B={n_bootstrap_estimators}, m=√p)": rf,
+    }
+    names: list[str] = []
+    means: list[float] = []
+    stds: list[float] = []
+    for name, m in models.items():
+        s = cross_val_score(m, x_arr, y_cls, cv=n_cv, scoring="accuracy", n_jobs=1)
+        names.append(name)
+        means.append(float(s.mean()))
+        stds.append(float(s.std()))
+
+    best_idx = int(np.argmax(means))
+    fig = go.Figure(
+        go.Bar(
+            x=names,
+            y=means,
+            error_y={"type": "data", "array": stds, "visible": True},
+            marker_color=["#c45c3e", "steelblue", "#2a9d4f"],
+        )
+    )
+    fig.update_layout(
+        title=(f"Variance reduction: one tree vs bagging vs random forest — §16.1 ({n_cv}-fold CV)"),
+        xaxis_title="model",
+        yaxis_title="accuracy",
+        yaxis={"range": [max(0.0, min(means) - 0.08), 1.0]},
+        template="plotly_white",
+    )
+    return fig, {
+        "best": names[best_idx],
+        "best_acc": means[best_idx],
+        "results": dict(zip(names, means, strict=False)),
+    }
+
+
+def oob_error_vs_n_trees_figure(
+    X: pd.DataFrame,
+    y: pd.Series,
+    feats: list[str] | None = None,
+    *,
+    max_rows: int = 2000,
+    n_list: list[int] | None = None,
+    random_state: int = 0,
+) -> tuple[go.Figure, dict[str, Any]]:
+    """
+    **OOB error** of a **random forest** as a function of the number of trees (§8.7, Ch. 15
+    in ESL; ensemble depth in Ch. 16).  OOB is an internal training-set estimate: each
+    point is tested only on trees that did not see it in their bootstrap sample.
+    """
+    if n_list is None:
+        n_list = [3, 8, 20, 40, 80, 120, 180, 250]
+    x_arr, y_cls = _prepare_arrays(X, y, feats, max_rows=max_rows, random_state=random_state)
+
+    oob_scores: list[float] = []
+    for n_t in n_list:
+        rf = RandomForestClassifier(
+            n_estimators=n_t,
+            max_features="sqrt",
+            random_state=random_state,
+            n_jobs=1,
+            oob_score=True,
+        )
+        rf.fit(x_arr, y_cls)
+        oob_scores.append(float(rf.oob_score_))
+    oob_err = [1.0 - s for s in oob_scores]
+
+    fig = go.Figure(
+        go.Scatter(
+            x=n_list,
+            y=oob_err,
+            mode="lines+markers",
+            name="1 - OOB accuracy",
+        )
+    )
+    fig.update_layout(
+        title="Random forest: OOB error vs number of trees (bagging/RF perspective) — §16.1",
+        xaxis_title="number of trees (B)",
+        yaxis_title="1 - OOB score (classification)",
+        template="plotly_white",
+    )
+    return fig, {"n_list": n_list, "final_oob_1minus": oob_err[-1] if oob_err else 0.0}
+
+
+def stacking_meta_learned_weights_figure(
+    X: pd.DataFrame,
+    y: pd.Series,
+    feats: list[str] | None = None,
+    *,
+    max_rows: int = 2000,
+    n_cv: int = 5,
+    random_state: int = 0,
+) -> tuple[go.Figure, dict[str, Any]]:
+    """
+    Fit **out-of-fold positive-class probabilities** for each of three level-0 classifiers, then
+    a **logistic** meta-learner on the 3D meta-features (mirrors `stack_method='predict_proba'`
+    but with one column per model for readability).
+
+    The bar chart shows **learned** combination weights (standardised log-odds coefficients);
+    a uniform blend would be roughly similar magnitudes in meta-feature space.
+    """
+    from sklearn.model_selection import StratifiedKFold
+
+    x_arr, y_cls = _prepare_arrays(X, y, feats, max_rows=max_rows, random_state=random_state)
+    y_arr = np.asarray(y_cls, dtype=int)
+
+    bases: list[tuple[str, Any]] = [
+        (
+            "lr",
+            LogisticRegression(max_iter=2000, random_state=random_state),
+        ),
+        (
+            "rf",
+            RandomForestClassifier(n_estimators=100, max_features="sqrt", random_state=random_state, n_jobs=1),
+        ),
+        (
+            "gbm",
+            GradientBoostingClassifier(
+                n_estimators=100,
+                learning_rate=0.1,
+                max_depth=3,
+                random_state=random_state,
+            ),
+        ),
+    ]
+    n = len(x_arr)
+    p_pos = np.zeros((n, len(bases)))
+    cvf = StratifiedKFold(n_splits=n_cv, shuffle=True, random_state=random_state)
+    for j, (_name, est) in enumerate(bases):
+        proba = cross_val_predict(est, x_arr, y_arr, cv=cvf, n_jobs=1, method="predict_proba")
+        p_pos[:, j] = proba[:, 1] if proba.shape[1] > 1 else proba.ravel()
+
+    meta = LogisticRegression(max_iter=2000, random_state=random_state, C=1.0)
+    meta.fit(p_pos, y_arr)
+    coefs = np.asarray(meta.coef_, dtype=float).ravel()
+    base_labels = [b[0] for b in bases]
+    if meta.intercept_ is not None and len(np.ravel(meta.intercept_)) > 0:
+        intercept = float(np.ravel(meta.intercept_)[0])
+    else:
+        intercept = 0.0
+
+    fig = go.Figure(
+        go.Bar(
+            x=base_labels,
+            y=coefs,
+            marker_color="purple",
+        )
+    )
+    fig.add_hline(y=0, line_dash="dash", line_color="gray", opacity=0.6)
+    fig.update_layout(
+        title="Stacking: logistic meta-learner weights on P(Y=1 | base) — §16.2 (OOF meta-features)",
+        xaxis_title="level-0 model (positive class prob. as feature)",
+        yaxis_title="meta-coefficient (log-odds scale)",
+        template="plotly_white",
+    )
+    return fig, {
+        "base_labels": base_labels,
+        "meta_coefs": dict(zip(base_labels, coefs.tolist(), strict=False)),
+        "intercept": intercept,
     }
